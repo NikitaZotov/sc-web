@@ -40,15 +40,22 @@ function ScgFromScImpl(_sandbox, _editor, aMapping) {
 
                 if (editor.scene.getObjectByScAddr(addr))
                     continue;
-
-                if (type & sc_type_node) {
+                if (type.isLink()) {
+                    var containerId = 'scg-window-' + sandbox.addr + '-' + addr + '-' + new Date().getUTCMilliseconds();
+                    var model_link = SCg.Creator.createLink(randomPos(), containerId);
+                    editor.scene.appendLink(model_link);
+                    editor.scene.objects[addr] = model_link;
+                    model_link.setScAddr(addr);
+                    model_link.setObjectState(SCgObjectState.FromMemory);
+                }
+                else if (type.isNode()) {
                     var model_node = SCg.Creator.createNode(type, randomPos(), '');
                     editor.scene.appendNode(model_node);
                     editor.scene.objects[addr] = model_node;
                     model_node.setScAddr(addr);
                     model_node.setObjectState(SCgObjectState.FromMemory);
                     resolveIdtf(addr, model_node);
-                } else if (type & sc_type_arc_mask) {
+                } else if (type.isConnector()) {
                     var bObj = editor.scene.getObjectByScAddr(task[2]);
                     var eObj = editor.scene.getObjectByScAddr(task[3]);
                     if (!bObj || !eObj) {
@@ -61,13 +68,6 @@ function ScgFromScImpl(_sandbox, _editor, aMapping) {
                         model_edge.setObjectState(SCgObjectState.FromMemory);
                         resolveIdtf(addr, model_edge);
                     }
-                } else if (type & sc_type_link) {
-                    var containerId = 'scg-window-' + sandbox.addr + '-' + addr + '-' + new Date().getUTCMilliseconds();
-                    var model_link = SCg.Creator.createLink(randomPos(), containerId);
-                    editor.scene.appendLink(model_link);
-                    editor.scene.objects[addr] = model_link;
-                    model_link.setScAddr(addr);
-                    model_link.setObjectState(SCgObjectState.FromMemory);
                 }
 
             }
@@ -117,9 +117,9 @@ function ScgFromScImpl(_sandbox, _editor, aMapping) {
                 let [_, el] = await getArc(arc);
                 let t = await getElementType(el);
                 arcMapping[arc] = el;
-                if (t & (sc_type_node | sc_type_link)) {
+                if (t.isLink()) {
                     addTask([el, t]);
-                } else if (t & sc_type_arc_mask) {
+                } else if (t.isConnector()) {
                     let [src, target] = await getArc(el);
                     addTask([el, t, src, target]);
                 } else
@@ -327,7 +327,7 @@ function scgScStructTranslator(_editor, _sandbox) {
             var translateContours = async function () {
                 // now need to process arcs from countours to child elements
                 var arcGen = async function (contour, child) {
-                    let edgeExist = await scHelper.checkEdge(contour.sc_addr, sc_type_arc_pos_const_perm, child.sc_addr);
+                    let edgeExist = await scHelper.checkEdge(contour.sc_addr, sc.ScType.ArcAccessConstPosPerm, child.sc_addr);
                     if (!edgeExist) {
                         let scConstruction = new sc.ScConstruction();
                         scConstruction.createEdge(sc.ScType.EdgeAccessConstPosPerm, new sc.ScAddr(contour.sc_addr), new sc.ScAddr(child.sc_addr), 'edge');

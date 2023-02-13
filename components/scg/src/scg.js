@@ -13,54 +13,50 @@ SCg.Editor.prototype = {
 
     init: function (params) {
         this.typesMap = {
-            'scg-type-node': sc_type_node,
-            'scg-type-node-const': sc_type_node | sc_type_const,
-            'scg-type-node-const-group': sc_type_node | sc_type_const | sc_type_node_class,
-            'scg-type-node-const-abstract': sc_type_node | sc_type_const | sc_type_node_abstract,
-            'scg-type-node-const-material': sc_type_node | sc_type_const | sc_type_node_material,
-            'scg-type-node-const-norole': sc_type_node | sc_type_const | sc_type_node_norole,
-            'scg-type-node-const-role': sc_type_node | sc_type_const | sc_type_node_role,
-            'scg-type-node-const-struct': sc_type_node | sc_type_const | sc_type_node_struct,
-            'scg-type-node-const-tuple': sc_type_node | sc_type_const | sc_type_node_tuple,
-            'scg-type-node-var': sc_type_node | sc_type_var,
-            'scg-type-node-var-group': sc_type_node | sc_type_var | sc_type_node_class,
-            'scg-type-node-var-abstract': sc_type_node | sc_type_var | sc_type_node_abstract,
-            'scg-type-node-var-material': sc_type_node | sc_type_var | sc_type_node_material,
-            'scg-type-node-var-norole': sc_type_node | sc_type_var | sc_type_node_norole,
-            'scg-type-node-var-role': sc_type_node | sc_type_var | sc_type_node_role,
-            'scg-type-node-var-struct': sc_type_node | sc_type_var | sc_type_node_struct,
-            'scg-type-node-var-tuple': sc_type_node | sc_type_var | sc_type_node_tuple,
-            'scg-type-edge-common': sc_type_edge_common,
-            'scg-type-arc-common': sc_type_arc_common,
-            'scg-type-arc-common-access': sc_type_arc_access,
-            'scg-type-edge-const': sc_type_edge_common | sc_type_const,
-            'scg-type-arc-const': sc_type_arc_common | sc_type_const,
-            'scg-type-arc-const-perm-pos-access': sc_type_arc_access | sc_type_const | sc_type_arc_pos |
-            sc_type_arc_perm,
-            'scg-type-arc-const-perm-neg-access': sc_type_arc_access | sc_type_const | sc_type_arc_neg |
-            sc_type_arc_perm,
-            'scg-type-arc-const-perm-fuz-access': sc_type_arc_access | sc_type_const | sc_type_arc_fuz |
-            sc_type_arc_perm,
-            'scg-type-arc-const-temp-pos-access': sc_type_arc_access | sc_type_const | sc_type_arc_pos |
-            sc_type_arc_temp,
-            'scg-type-arc-const-temp-neg-access': sc_type_arc_access | sc_type_const | sc_type_arc_neg |
-            sc_type_arc_temp,
-            'scg-type-arc-const-temp-fuz-access': sc_type_arc_access | sc_type_const | sc_type_arc_fuz |
-            sc_type_arc_temp,
-            'scg-type-edge-var': sc_type_edge_common | sc_type_var,
-            'scg-type-arc-var': sc_type_arc_common | sc_type_var,
-            'scg-type-arc-var-perm-pos-access': sc_type_arc_access | sc_type_var | sc_type_arc_pos |
-            sc_type_arc_perm,
-            'scg-type-arc-var-perm-neg-access': sc_type_arc_access | sc_type_var | sc_type_arc_neg |
-            sc_type_arc_perm,
-            'scg-type-arc-var-perm-fuz-access': sc_type_arc_access | sc_type_var | sc_type_arc_fuz |
-            sc_type_arc_perm,
-            'scg-type-arc-var-temp-pos-access': sc_type_arc_access | sc_type_var | sc_type_arc_pos |
-            sc_type_arc_temp,
-            'scg-type-arc-var-temp-neg-access': sc_type_arc_access | sc_type_var | sc_type_arc_neg |
-            sc_type_arc_temp,
-            'scg-type-arc-var-temp-fuz-access': sc_type_arc_access | sc_type_var | sc_type_arc_fuz |
-            sc_type_arc_temp
+            'scg-type-node': sc.ScType.Node,
+            'scg-type-node-const': sc.ScType.NodeConst,
+            'scg-type-node-const-group': sc.ScType.NodeConstClass,
+            'scg-type-node-const-abstract': sc.ScType.NodeConstAbstract,
+            'scg-type-node-const-material': sc.ScType.NodeConstMaterial,
+            'scg-type-node-const-norole': sc.ScType.NodeConstNoRole,
+            'scg-type-node-const-role': sc.ScType.NodeConstRole,
+            'scg-type-node-const-struct': sc.ScType.NodeConstStruct,
+            'scg-type-node-const-tuple': sc.ScType.NodeConstTuple,
+            'scg-type-node-var': sc.ScType.NodeVar,
+            'scg-type-node-var-group': sc.ScType.NodeVarClass,
+            'scg-type-node-var-abstract': sc.ScType.NodeVarAbstract,
+            'scg-type-node-var-material': sc.ScType.NodeVarMaterial,
+            'scg-type-node-var-norole': sc.ScType.NodeVarNoRole,
+            'scg-type-node-var-role': sc.ScType.NodeVarRole,
+            'scg-type-node-var-struct': sc.ScType.NodeVarStruct,
+            'scg-type-node-var-tuple': sc.ScType.NodeVarTuple,
+            'scg-type-edge-common': sc.ScType.EdgeCommon,
+            'scg-type-arc-common': sc.ScType.ArcCommon,
+            'scg-type-arc-common-access': sc.ScType.ArcAccess,
+            'scg-type-edge-const': sc.ScType.EdgeCommonConst,
+            'scg-type-arc-const': sc.ScType.ArcCommonConst,
+            'scg-type-arc-const-perm-pos-access': sc.ScType.ArcAccessConstPosPerm,
+            'scg-type-arc-const-perm-neg-access': sc.ScType.ArcAccessConstNegPerm,
+            'scg-type-arc-const-perm-fuz-access': sc.ScType.ArcAccessConstFuzPerm,
+            'scg-type-arc-const-temp-pos-access': sc.ScType.ArcAccessConstPosTemp,
+            'scg-type-arc-const-temp-neg-access': sc.ScType.ArcAccessConstNegTemp,
+            'scg-type-arc-const-temp-fuz-access': sc.ScType.ArcAccessConstFuzTemp,
+            'scg-type-edge-var': sc.ScType.EdgeCommonVar,
+            'scg-type-arc-var': sc.ScType.ArcCommonVar,
+            'scg-type-arc-var-perm-pos-access': sc.ScType.ArcAccessVarPosPerm,
+            'scg-type-arc-var-perm-neg-access': sc.ScType.ArcAccessVarNegPerm,
+            'scg-type-arc-var-perm-fuz-access': sc.ScType.ArcAccessVarFuzPerm,
+            'scg-type-arc-var-temp-pos-access': sc.ScType.ArcAccessVarPosTemp,
+            'scg-type-arc-var-temp-neg-access': sc.ScType.ArcAccessVarNegTemp,
+            'scg-type-arc-var-temp-fuz-access': sc.ScType.ArcAccessVarFuzTemp,
+            'scg-type-edge-metavar': sc.ScType.EdgeCommonMetaVar,
+            'scg-type-arc-metavar': sc.ScType.ArcCommonMetaVar,
+            'scg-type-arc-metavar-perm-pos-access': sc.ScType.ArcAccessMetaVarPosPerm,
+            'scg-type-arc-metavar-perm-neg-access': sc.ScType.ArcAccessMetaVarNegPerm,
+            'scg-type-arc-metavar-perm-fuz-access': sc.ScType.ArcAccessMetaVarFuzPerm,
+            'scg-type-arc-metavar-temp-pos-access': sc.ScType.ArcAccessMetaVarPosTemp,
+            'scg-type-arc-metavar-temp-neg-access': sc.ScType.ArcAccessMetaVarNegTemp,
+            'scg-type-arc-metavar-temp-fuz-access': sc.ScType.ArcAccessMetaVarFuzTemp,
         };
 
         this.render = new SCg.Render();

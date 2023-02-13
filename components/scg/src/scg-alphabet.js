@@ -179,26 +179,38 @@ var SCgAlphabet = {
      * Initialize sc-types mapping
      */
     initTypesMapping: function () {
-        this.scType2Str[sc_type_node] = 'scg.node';
-        this.scType2Str[sc_type_node | sc_type_const] = 'scg.node.const';
-        this.scType2Str[sc_type_node | sc_type_const | sc_type_node_material] = 'scg.node.const.material';
-        this.scType2Str[sc_type_node | sc_type_const | sc_type_node_abstract] = 'scg.node.const.abstract';
-        this.scType2Str[sc_type_node | sc_type_const | sc_type_node_class] = 'scg.node.const.class';
-        this.scType2Str[sc_type_node | sc_type_const | sc_type_node_struct] = 'scg.node.const.struct';
-        this.scType2Str[sc_type_node | sc_type_const | sc_type_node_norole] = 'scg.node.const.norole';
-        this.scType2Str[sc_type_node | sc_type_const | sc_type_node_role] = 'scg.node.const.role';
-        this.scType2Str[sc_type_node | sc_type_const | sc_type_node_tuple] = 'scg.node.const.tuple';
+        this.scType2Str[sc.ScType.Node] = 'scg.node';
+        this.scType2Str[sc.ScType.NodeConst] = 'scg.node.const';
+        this.scType2Str[sc.ScType.NodeConstMaterial] = 'scg.node.const.material';
+        this.scType2Str[sc.ScType.NodeConstAbstract] = 'scg.node.const.abstract';
+        this.scType2Str[sc.ScType.NodeConstClass] = 'scg.node.const.class';
+        this.scType2Str[sc.ScType.NodeConstStruct] = 'scg.node.const.struct';
+        this.scType2Str[sc.ScType.NodeConstNoRole] = 'scg.node.const.norole';
+        this.scType2Str[sc.ScType.NodeConstRole] = 'scg.node.const.role';
+        this.scType2Str[sc.ScType.NodeConstTuple] = 'scg.node.const.tuple';
 
-        this.scType2Str[sc_type_node | sc_type_var] = 'scg.node.var';
-        this.scType2Str[sc_type_node | sc_type_var | sc_type_node_material] = 'scg.node.var.material';
-        this.scType2Str[sc_type_node | sc_type_var | sc_type_node_abstract] = 'scg.node.var.abstract';
-        this.scType2Str[sc_type_node | sc_type_var | sc_type_node_class] = 'scg.node.var.class';
-        this.scType2Str[sc_type_node | sc_type_var | sc_type_node_struct] = 'scg.node.var.struct';
-        this.scType2Str[sc_type_node | sc_type_var | sc_type_node_norole] = 'scg.node.var.norole';
-        this.scType2Str[sc_type_node | sc_type_var | sc_type_node_role] = 'scg.node.var.role';
-        this.scType2Str[sc_type_node | sc_type_var | sc_type_node_tuple] = 'scg.node.var.tuple';
+        this.scType2Str[sc.ScType.NodeVar] = 'scg.node.var';
+        this.scType2Str[sc.ScType.NodeVarMaterial] = 'scg.node.var.material';
+        this.scType2Str[sc.ScType.NodeVarAbstract] = 'scg.node.var.abstract';
+        this.scType2Str[sc.ScType.NodeVarClass] = 'scg.node.var.class';
+        this.scType2Str[sc.ScType.NodeVarStruct] = 'scg.node.var.struct';
+        this.scType2Str[sc.ScType.NodeVarNoRole] = 'scg.node.var.norole';
+        this.scType2Str[sc.ScType.NodeVarRole] = 'scg.node.var.role';
+        this.scType2Str[sc.ScType.NodeVarTuple] = 'scg.node.var.tuple';
 
-        this.scType2Str[sc_type_link] = 'scg.link';
+        this.scType2Str[sc.ScType.NodeMetaVar] = 'scg.node.metavar';
+        this.scType2Str[sc.ScType.NodeMetaVarMaterial] = 'scg.node.metavar.material';
+        this.scType2Str[sc.ScType.NodeMetaVarAbstract] = 'scg.node.metavar.abstract';
+        this.scType2Str[sc.ScType.NodeMetaVarClass] = 'scg.node.metavar.class';
+        this.scType2Str[sc.ScType.NodeMetaVarStruct] = 'scg.node.metavar.struct';
+        this.scType2Str[sc.ScType.NodeMetaVarNoRole] = 'scg.node.metavar.norole';
+        this.scType2Str[sc.ScType.NodeMetaVarRole] = 'scg.node.metavar.role';
+        this.scType2Str[sc.ScType.NodeMetaVarTuple] = 'scg.node.metavar.tuple';
+
+        this.scType2Str[sc.ScType.Link] = 'scg.link';
+        this.scType2Str[sc.ScType.LinkConst] = 'scg.link.const';
+        this.scType2Str[sc.ScType.LinkVar] = 'scg.link.var';
+        this.scType2Str[sc.ScType.LinkMetaVar] = 'scg.link.metavar';
     },
 
     /**
@@ -246,11 +258,11 @@ var SCgAlphabet = {
             d3_group.append('svg:path').classed('SCgEdgeSelectBounds', true).attr('d', position_path);
 
             // if it accessory, then append main line
-            if (edge.sc_type & sc_type_arc_access) {
+            if (edge.sc_type.isAccess()) {
 
                 var main_style = 'SCgEdgeAccessPerm';
-                if (edge.sc_type & sc_type_arc_temp) {
-                    main_style = edge.sc_type & sc_type_var ? 'SCgEdgeAccessTempVar' : 'SCgEdgeAccessTemp';
+                if (edge.sc_type.isTemp()) {
+                    main_style = edge.sc_type.isVar() ? 'SCgEdgeAccessTempVar' : 'SCgEdgeAccessTemp';
                 }
 
                 var p = d3_group.append('svg:path')
@@ -259,31 +271,31 @@ var SCgAlphabet = {
                     .style("marker-end", "url(#end-arrow-access_" + containerId + ")")
                     .attr('d', position_path);
 
-                if (edge.sc_type & sc_type_constancy_mask) {
-                    p.classed('SCgEdgeVarDashAccessPerm', (edge.sc_type & sc_type_var) && (edge.sc_type & sc_type_arc_perm));
+                if (edge.sc_type.hasConstancy()) {
+                    p.classed('SCgEdgeVarDashAccessPerm', (edge.sc_type.isVar()) && (edge.sc_type.isPerm()));
                 } else {
                     d3_group.append('svg:path')
                         .classed('SCgEdgeAccessComonDash', true)
                         .attr('d', position_path);
                 }
 
-                if (edge.sc_type & sc_type_arc_neg) {
+                if (edge.sc_type.isNeg()) {
                     d3_group.append('svg:path')
                         .classed('SCgEdgePermNegDash', true)
                         .attr('d', position_path);
                 }
-            } else if (edge.sc_type & (sc_type_arc_common | sc_type_edge_common)) {
+            } else if (edge.sc_type.isConnector()) {
 
-                if (edge.sc_type & sc_type_edge_common) {
+                if (edge.sc_type.isEdge()) {
                     d3_group.append('svg:path')
                         .classed('SCgEdgeCommonBack', true)
                         .attr('d', position_path);
                 }
 
-                if (edge.sc_type & sc_type_arc_common) {
+                if (edge.sc_type.isArc()) {
                     d3_group.append('svg:path')
                         .classed('SCgEdgeCommonBack', true)
-                        .classed('SCgEdgeEndArrowCommon', edge.sc_type & sc_type_arc_common)
+                        .classed('SCgEdgeEndArrowCommon', edge.sc_type.isArc())
                         .style("marker-end", "url(#end-arrow-common_" + containerId + ")")
                         .attr('d', position_path);
                 }
@@ -292,8 +304,8 @@ var SCgAlphabet = {
                     .classed('SCgEdgeCommonForeground', true)
                     .attr('d', position_path)
 
-                if (edge.sc_type & sc_type_constancy_mask) {
-                    if (edge.sc_type & sc_type_var) {
+                if (edge.sc_type.hasConstancy()) {
+                    if (edge.sc_type.isVar()) {
                         d3_group.append('svg:path')
                             .classed('SCgEdgeCommonForegroundVar', true)
                             .classed('SCgEdgeVarDashCommon', true)
@@ -320,7 +332,7 @@ var SCgAlphabet = {
         }
 
         // now we need to draw fuz markers (for now it not supported)
-        if (edge.sc_type & sc_type_arc_fuz) {
+        if (edge.sc_type.isFuz()) {
             d3_group.selectAll('path').attr('stroke', '#f00');
             d3_group.append('svg:path')
                 .classed('SCgEdgeFuzDash', true)

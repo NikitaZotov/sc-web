@@ -44,8 +44,8 @@ var KeyCode = {
     Z: 90
 };
 
-var SCgTypeEdgeNow = sc_type_arc_pos_const_perm;
-var SCgTypeNodeNow = sc_type_node | sc_type_const;
+const SCgTypeEdgeNow = sc.ScType.ArcAccessConstPosPerm;
+const SCgTypeNodeNow = sc.ScType.NodeConst;
 
 SCg.Scene = function (options) {
 
@@ -587,12 +587,9 @@ SCg.Scene.prototype = {
     },
 
     isSelectedObjectAllArcsOrAllNodes: function () {
-        var objects = this.selected_objects;
-        var typeMask = objects[0].sc_type & sc_type_arc_mask ? sc_type_arc_mask :
-            objects[0].sc_type & sc_type_node ?
-                sc_type_node : 0;
+        const objects = this.selected_objects;
         return (objects.every(function (obj) {
-            return ((obj.sc_type & typeMask) && !(obj instanceof SCg.ModelContour) && !(obj instanceof SCg.ModelBus));
+            return (!(obj instanceof SCg.ModelContour) && !(obj instanceof SCg.ModelBus));
         }))
     },
 

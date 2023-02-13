@@ -20,7 +20,7 @@ SCs.SCnTree.prototype = {
      * Append new addr into sc-addrs list
      */
     _appendAddr: function (el) {
-        if (!(el.type & sc_type_link) && this.addrs.indexOf(el.addr) < 0) {
+        if (!(el.type.isLink()) && this.addrs.indexOf(el.addr) < 0) {
             this.addrs.push(el.addr);
         }
     },
@@ -48,7 +48,7 @@ SCs.SCnTree.prototype = {
         while (idx < this.triples.length) {
             var tpl = this.triples[idx];
 
-            if ((tpl[1].type != sc_type_arc_pos_const_perm) || !(tpl[0].type & sc_type_node_struct) || (tpl[0].addr == this.contourAddr)) {
+            if ((tpl[1].type === sc.ScType.ArcAccessConstPosPerm) || !(tpl[0].type.isStruct()) || (tpl[0].addr == this.contourAddr)) {
                 idx++;
                 continue;
             }
@@ -120,9 +120,9 @@ SCs.SCnTree.prototype = {
             var key_key = this.getKeynode('rrel_key_sc_element');
             var keywordsList = [];
             var keywords = tu.find5_f_a_a_a_f(addr,
-                sc_type_arc_pos_const_perm,
-                0,
-                sc_type_arc_pos_const_perm,
+                sc.ScType.ArcAccessConstPosPerm,
+                sc.ScType.Unknown,
+                sc.ScType.ArcAccessConstPosPerm,
                 key_key);
             if (keywords) {
                 // try to find order
@@ -143,9 +143,9 @@ SCs.SCnTree.prototype = {
                         if (i === j) continue;
 
                         var result = tu.find5_f_a_f_a_f(klist[i],
-                            sc_type_arc_common | sc_type_const,
+                            sc.ScType.ArcCommonConst,
                             klist[j],
-                            sc_type_arc_pos_const_perm,
+                            sc.ScType.ArcAccessConstPosPerm,
                             order_key);
                         if (result) {
                             orderMap[klist[i]] = klist[j];
@@ -235,8 +235,8 @@ SCs.SCnTree.prototype = {
 
             // stop tree building after input sc_type_arc_pos_const_perm to sc_type_link
             if ((node.parent)
-                && (node.parent.element.type & sc_type_link)
-                && (node.predicate.type == sc_type_arc_pos_const_perm)
+                && (node.parent.element.type.isLink())
+                && (node.predicate.type === sc.ScType.ArcAccessConstPosPerm)
                 && (node.backward)
             ) {
                 continue;
@@ -257,8 +257,8 @@ SCs.SCnTree.prototype = {
                 if (!tpl.output && !tpl.ignore) {
                     // arc attributes
                     if (node.type == SCs.SCnTreeNodeType.Sentence) {
-                        if ((tpl[0].type & (sc_type_node_role | sc_type_node_norole))
-                            && (tpl[1].type & sc_type_arc_pos_const_perm | sc_type_var)
+                        if ((tpl[0].type.isRole() || tpl[0].type.isNoRole())
+                            && (tpl[1].type.isArc())
                             && tpl[2].addr == node.predicate.addr) {
                             node.attrs.push({n: tpl[0], a: tpl[1], triple: tpl});
                             tpl.output = true;
@@ -292,7 +292,7 @@ SCs.SCnTree.prototype = {
                         nd.backward = backward;
                         tpl.scn = {treeNode: nd};
 
-                        if (el.type & sc_type_link) {
+                        if (el.type.isLink()) {
                             this.usedLinks[el.addr] = el;
                         }
 
@@ -371,7 +371,7 @@ SCs.SCnTree.prototype = {
         function addArc(el, value) {
 
             var n = value;
-            if (el.type & (sc_type_arc_mask | sc_type_link))
+            if (el.type.isConnector() || el.type.isLink())
                 n += -2; // minimize priority of arcs
 
             if (keywords[el.addr])
@@ -385,11 +385,11 @@ SCs.SCnTree.prototype = {
             var tpl = triples[idx];
             var n = 1;
 
-            if (tpl[2].type & sc_type_arc_mask | tpl[0].type & sc_type_link)
+            if (tpl[2].type.isConnector() || tpl[0].type.isLink())
                 n -= 1; // minimize priority of nodes, that has output/input arcs to other arcs or links
-            if (tpl[2].type & sc_type_link || tpl[0].type & sc_type_link)
+            if (tpl[2].type.isLink() || tpl[0].type.isLink())
                 n -= 1; // minimize priority of nodes, that has output/input arcs to links
-            if (tpl[1].type & (sc_type_arc_common | sc_type_edge_common))
+            if (tpl[1].type.isConnector())
                 n += 1;
 
             if (addr != null) {

@@ -76,8 +76,8 @@ class ExpertModeManager {
     findExpertKeynodeTriples(keynodeList) {
         let systemIdTriples = keynodeList
             .map(keynode => {
-                const arcTriples = this.tripleUtils.find3_f_a_a(keynode, sc_type_arc_pos_const_perm, sc_type_arc_common);
-                const linkTriples = this.tripleUtils.find3_f_a_a(keynode, sc_type_arc_pos_const_perm, sc_type_link);
+                const arcTriples = this.tripleUtils.find3_f_a_a(keynode, sc.ScType.ArcAccessConstPosPerm, sc.ScType.ArcCommon);
+                const linkTriples = this.tripleUtils.find3_f_a_a(keynode, sc.ScType.ArcAccessConstPosPerm, sc.ScType.Link);
                 return [].concat(arcTriples, linkTriples);
             });
         return [].concat.apply([], systemIdTriples);
@@ -119,7 +119,7 @@ class ExpertModeManager {
         const arcsToRemove = [];
         const newTriples = [];
         this.tripleUtils
-            .find3_f_a_a(rrelKeyScElement, sc_type_arc_pos_const_perm, sc_type_arc_pos_const_perm)
+            .find3_f_a_a(rrelKeyScElement, sc.ScType.ArcAccessConstPosPerm, sc.ScType.ArcAccessConstPosPerm)
             .forEach(triple => {
                 const [translationNode, edge, sourceNode] = this.tripleUtils.getEdge(triple[2].addr);
                 const preLinkNode = this.findPreLinkNodeTriple(translationNode);
@@ -140,16 +140,16 @@ class ExpertModeManager {
     findPreLinkNodeTriple(translationNode) {
         const nrelScTextTranslation = this.getKeynode("nrel_sc_text_translation");
         const triples = this.tripleUtils.find5_a_a_f_a_f(
-            sc_type_node,
-            sc_type_arc_common,
+            sc.ScType.NodeConst,
+            sc.ScType.ArcCommonConst,
             translationNode.addr,
-            sc_type_arc_pos_const_perm,
+            sc.ScType.ArcAccessConstPosPerm,
             nrelScTextTranslation);
         return triples.length && triples[0];
     }
 
     findLinkNodeTriple(preLinkNode) {
-        const triples = this.tripleUtils.find3_f_a_a(preLinkNode.addr, sc_type_arc_pos_const_perm, sc_type_link);
+        const triples = this.tripleUtils.find3_f_a_a(preLinkNode.addr, sc.ScType.ArcAccessConstPosPerm, sc.ScType.LinkConst);
         return triples.length && triples[0];
     }
 }

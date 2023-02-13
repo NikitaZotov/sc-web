@@ -37,7 +37,7 @@ SCg.ModelObject = function (options) {
     if (options.sc_type) {
         this.sc_type = options.sc_type;
     } else {
-        this.sc_type = sc_type_node;
+        this.sc_type = sc.ScType.NodeConst;
     }
 
     if (options.sc_addr) {
@@ -502,7 +502,7 @@ SCg.ModelEdge.prototype.update = function () {
 /*! Checks if this edge need to be drawen with arrow at the end
  */
 SCg.ModelEdge.prototype.hasArrow = function () {
-    return this.sc_type & (sc_type_arc_common | sc_type_arc_access);
+    return !this.sc_type.isEdge();
 };
 
 /*!
@@ -618,7 +618,7 @@ SCg.ModelContour = function (options) {
 
     this.childs = [];
     this.points = options.verticies ? options.verticies : [];
-    this.sc_type = options.sc_type ? options.sc_type : sc_type_node_struct | sc_type_node;
+    this.sc_type = sc.ScType.NodeConstStruct;
     this.previousPoint = null;
 
     var cx = 0;

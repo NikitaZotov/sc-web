@@ -21,7 +21,7 @@ SCg.Creator.createLink = function (pos, containerId) {
     var link = new SCg.ModelLink({
         position: pos.clone(),
         scale: new SCg.Vector2(50, 50),
-        sc_type: sc_type_link,
+        sc_type: sc.ScType.LinkConst,
         containerId: containerId
     });
     link.setContent("");
@@ -40,7 +40,7 @@ SCg.Creator.createEdge = function (source, target, sc_type) {
     return new SCg.ModelEdge({
         source: source,
         target: target,
-        sc_type: sc_type ? sc_type : sc_type_edge_common
+        sc_type: sc_type,
     });
 };
 
