@@ -462,7 +462,7 @@ SCWeb.core.ComponentSandbox.prototype.updateContent = async function (scAddr, sc
             const triples = await scClient.templateSearch(scTemplateSearchEdgeElements);
 
             const edgeFromMainElementTypes = await scClient.checkElements(
-                triples.map(triple => triple.get("_main_element_edge")));
+                triples.map(triple => triple.get("_edge_from_main_element")));
             const mainElementEdgeTypes = await scClient.checkElements(
                 triples.map(triple => triple.get("_main_element_edge")));
             const mainElementEdgeSourceTypes = await scClient.checkElements(
