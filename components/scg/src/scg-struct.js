@@ -25,7 +25,7 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
         maxAppendBatchLength = 150,
         maxRemoveBatchLength = 20,
         batchDelayTime = 200,
-        defualtObjectStyles = { node: 1.8, link: 1.5, opacity: 1, widthEdge: 7.5, stroke: '#1E90FF', fill: '#1E90FF' },
+        defaultObjectStyles = { node: 1.8, link: 1.5, opacity: 1, widthEdge: 7.5, stroke: '#1E90FF', fill: '#1E90FF' },
         editor = _editor,
         sandbox = _sandbox;
 
@@ -50,7 +50,7 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
 
             delete addrsToAppendTasks[addr];
 
-            if (!styles && sandbox.mainElement) styles = defualtObjectStyles;
+            if (!styles && sandbox.mainElement) styles = defaultObjectStyles;
 
             let object = editor.scene.getObjectByScAddr(addr);
             if (object) {

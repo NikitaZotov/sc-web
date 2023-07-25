@@ -33,10 +33,10 @@ SCWeb.core.ComponentSandbox = function (options) {
     this.eventWindowActiveChanged = null;
     this.eventDataAppend = null;
 
-    /* function (added, element, arc)
+    /* function (added, arc, element)
      * - added - true, when element added; false - element removed
-     * - element - sc-addr of added(removed) sc-element
      * - arc - sc-addr of arc that connect struct with element
+     * - element - sc-addr of added(removed) sc-element
      */
     this.eventStructUpdate = null;
 
