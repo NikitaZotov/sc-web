@@ -435,9 +435,6 @@ SCWeb.core.ComponentSandbox.prototype.updateContent = async function (scAddr, sc
             let newVisitedElements = new Set();
 
             const mainElementHash = mainElement.value;
-            if (visitedElements.has(mainElementHash)) return newVisitedElements;
-            newVisitedElements.add(mainElementHash);
-
             if (relationElements.has(mainElementHash)) return newVisitedElements;
             relationElements.add(mainElementHash);
 
@@ -488,12 +485,10 @@ SCWeb.core.ComponentSandbox.prototype.updateContent = async function (scAddr, sc
 
                 const mainElementEdgeSourceHash = mainElementEdgeSource.value;
                 if (visitedElements.has(mainElementEdgeSourceHash)) continue;
-                newVisitedElements.add(mainElementEdgeSourceHash);
                 levelNodes[mainElementEdgeSourceHash] = mainElementEdgeSourceType;
 
                 const mainElementEdgeTargetHash = mainElementEdgeTarget.value;
                 if (visitedElements.has(mainElementEdgeTargetHash)) continue;
-                newVisitedElements.add(mainElementEdgeTargetHash);
                 levelNodes[mainElementEdgeTargetHash] = mainElementEdgeTargetType;
 
                 self.eventStructUpdate({
