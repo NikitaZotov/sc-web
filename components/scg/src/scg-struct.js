@@ -46,6 +46,8 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
             const type = task[1];
             let styles = task[2];
 
+            console.log(task);
+
             delete addrsToAppendTasks[addr];
 
             if (!styles && sandbox.mainElement) styles = defualtObjectStyles;
