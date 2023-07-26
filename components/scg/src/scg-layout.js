@@ -42,16 +42,20 @@ SCg.LayoutAlgorithmForceBased.prototype.stop = function () {
         delete this.force;
         this.force = null;
     }
+
 };
 
 SCg.LayoutAlgorithmForceBased.prototype.start = function () {
+    this.stop();
+
     // init D3 force layout
     let self = this;
-    self.force = d3.layout.force()
+
+    this.force = d3.layout.force()
         .nodes(this.nodes)
         .links(this.edges)
         .size(this.rect)
-        .friction(0.9)
+        .friction(0.5)
         .gravity(0.03)
         .linkDistance(function (edge) {
             const p1 = edge.source.object.getConnectionPos(edge.target.object.position, edge.object.source_dot);
@@ -142,9 +146,7 @@ SCg.LayoutManager.prototype.init = function (scene) {
 /**
  * Prepare objects for layout
  */
-SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes, sceneLinks, sceneEdges, sceneContours) {
-    let self = this;
-
+SCg.LayoutManager.prototype.prepareObjects = function () {
     this.nodes = {};
     this.edges = {};
     let objDict = {};
@@ -162,7 +164,9 @@ SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes, sceneLinks, s
     }
 
     // first of all we need to collect objects from scene, and build them representation for layout
-    const matchLayoutNode = function (node) {
+    for (let idx in this.scene.nodes) {
+        const node = this.scene.nodes[idx];
+
         let obj = {};
         obj.x = node.position.x;
         obj.y = node.position.y;
@@ -172,12 +176,12 @@ SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes, sceneLinks, s
 
         objDict[node.id] = obj;
 
-        if (sceneNodes.includes(node)) return;
-
-        appendElement(obj, self.nodes);
+        appendElement(obj, this.nodes);
     }
 
-    const matchLayoutLink = function (link) {
+    for (let idx in this.scene.links) {
+        const link = this.scene.links[idx];
+
         let obj = {};
         obj.x = link.position.x;
         obj.y = link.position.y;
@@ -187,12 +191,12 @@ SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes, sceneLinks, s
 
         objDict[link.id] = obj;
 
-        if (sceneLinks.includes(link)) return;
-
-        appendElement(obj, self.nodes);
+        appendElement(obj, this.nodes);
     }
 
-    const matchLayoutEdge = function (edge) {
+    for (let idx in this.scene.edges) {
+        const edge = this.scene.edges[idx];
+
         let obj = {};
         obj.object = edge;
         obj.type = SCgLayoutObjectType.Edge;
@@ -200,12 +204,12 @@ SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes, sceneLinks, s
 
         objDict[edge.id] = obj;
 
-        if (sceneEdges.includes(edge)) return;
-
-        appendElement(obj, self.edges);
+        appendElement(obj, this.edges);
     }
 
-    const matchLayoutContour = function (contour) {
+    for (let idx in this.scene.contours) {
+        const contour = this.scene.contours[idx];
+
         let obj = {};
         obj.x = contour.position.x;
         obj.y = contour.position.y;
@@ -214,23 +218,7 @@ SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes, sceneLinks, s
 
         objDict[contour.id] = obj;
 
-        if (sceneContours.includes(contour)) return;
-
-        appendElement(obj, self.nodes);
-    }
-
-    for (let key in this.scene.objects) {
-        const object = this.scene.objects[key];
-
-        if (object instanceof SCg.ModelNode) {
-            matchLayoutNode(object);
-        } else if (object instanceof SCg.ModelLink) {
-            matchLayoutLink(object);
-        } else if (object instanceof SCg.ModelEdge) {
-            matchLayoutEdge(object);
-        } else if (object instanceof SCg.ModelContour) {
-            matchLayoutContour(object);
-        }
+        appendElement(obj, this.nodes);
     }
 
     // store begin and end for edges
@@ -268,13 +256,13 @@ SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes, sceneLinks, s
 /**
  * Starts layout in scene
  */
-SCg.LayoutManager.prototype.doLayout = function (sceneNodes, sceneLinks, sceneEdges, sceneContours) {
+SCg.LayoutManager.prototype.doLayout = function () {
     if (this.algorithm) {
         this.algorithm.stop();
         delete this.algorithm;
     }
 
-    this.prepareObjects(sceneNodes, sceneLinks, sceneEdges, sceneContours);
+    this.prepareObjects();
     this.algorithm = new SCg.LayoutAlgorithmForceBased(this.nodes[0], this.edges[0], null,
         $.proxy(this.onTickUpdate, this),
         this.scene.getContainerSize());

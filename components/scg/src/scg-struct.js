@@ -2,9 +2,9 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
     let appendTasks = [],
         addrsToAppendTasks = {},
         removeTasks = [],
-        maxAppendBatchLength = 24,
+        maxAppendBatchLength = 20,
         maxRemoveBatchLength = 20,
-        batchDelayTime = 200,
+        batchDelayTime = 500,
         defaultObjectStyles = { node: 1.8, link: 1.5, opacity: 1, widthEdge: 7.5, stroke: '#1E90FF', fill: '#1E90FF' },
         editor = _editor,
         sandbox = _sandbox;
@@ -31,6 +31,7 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
             timerId = setTimeout(() => {
                 func(tasks.splice(0, tasks.length));
                 tasks.splice(0, tasks.length);
+                sandbox.postLayout();
             }, wait);
 
             if (tasks.length === maxBatchLength) {
@@ -43,20 +44,6 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
     };
 
     const doAppendBatch = function (batch) {
-        const nodes = [];
-        const links = [];
-        const edges = [];
-
-        const appendObject = function (object) {
-            if (object instanceof SCg.ModelNode) {
-                nodes.push(object);
-            } else if (object instanceof SCg.ModelEdge) {
-                edges.push(object);
-            } else {
-                links.push(object);
-            }
-        }
-
         for (let i in batch) {
             const task = batch[i];
             const addr = task[0];
@@ -82,8 +69,6 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
                     object.setFillElem(styles.fill);
                     object.setOpacityElem(styles.opacity);
                 }
-
-                appendObject(object);
                 continue;
             }
 
@@ -98,8 +83,7 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
                     delete appendTasks[i];
 
                     // Not call addAppendTask because scg-filters are used
-                    appendTasks.push(task);
-                    addrsToAppendTasks[addr] = appendTasks.length;
+                    addAppendTask(addr, task);
                     continue;
                 }
                 object = SCg.Creator.createEdge(bObj, eObj, type);
@@ -123,11 +107,11 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
             editor.scene.objects[addr] = object;
             object.setScAddr(addr);
             object.setObjectState(SCgObjectState.FromMemory);
-
-            appendObject(object);
         }
 
-        editor.scene.layout(nodes, links, edges, []);
+        (async () => {
+            sandbox.layout();
+        })();
     };
 
     const [debouncedBufferedDoAppendBatch] = debouncedBuffered(doAppendBatch, batchDelayTime);

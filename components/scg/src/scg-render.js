@@ -59,13 +59,13 @@ SCg.Render.prototype = {
                 if (d3.event.stopPropagation()) d3.event.stopPropagation();
             })
             .on("wheel", function () {
-                var direction = d3.event.wheelDelta < 0 ? 'down' : 'up';
+                const direction = d3.event.wheelDelta < 0 ? 'down' : 'up';
                 if (direction === 'up') {
                     self.transformByZoom(d3.event);
                 }
                 if (direction === 'down') {
                     self.transformByZoom(d3.event);
-                };
+                }
             });
 
         const svg = document.querySelector("svg.SCgSvg");
@@ -220,8 +220,6 @@ SCg.Render.prototype = {
                         d3.event.stopPropagation();
                 })
                 .on('mousedown', function (d) {
-                    if (SCWeb.core.Main.mode === SCgEditMode.SCgModeViewOnly) return;
-
                     self.scene.onMouseDownObject(d);
                     if (d3.event.stopPropagation())
                         d3.event.stopPropagation();

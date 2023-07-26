@@ -334,6 +334,15 @@ SCWeb.core.ComponentSandbox.prototype.updateContent = async function (scAddr, sc
             level1Styles, level2Styles, level3Styles, level4Styles, level5Styles, level6Styles, level7Styles
         ];
 
+        self.layout = () => {
+            scAddr ? self.scene.updateRender() : self.scene.layout();
+            //self.scene.layout();
+        };
+
+        self.postLayout = () => {
+            //scAddr ? self.scene.layout() : self.scene.updateRender();
+        };
+
         const getSceneElementsByRelation = async (relation) => {
             let template = new sc.ScTemplate();
             template.tripleWithRelation(
@@ -667,6 +676,14 @@ SCWeb.core.ComponentSandbox.prototype.updateContent = async function (scAddr, sc
     }
 
     const updateScgWindow = async (sceneAddr) => {
+        self.layout = () => {
+            self.scene.layout();
+        };
+
+        self.postLayout = () => {
+            self.scene.updateRender();
+        };
+
         let scTemplate = new sc.ScTemplate();
         scTemplate.triple(
             sceneAddr,
