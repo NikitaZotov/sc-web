@@ -42,16 +42,12 @@ SCg.LayoutAlgorithmForceBased.prototype.stop = function () {
         delete this.force;
         this.force = null;
     }
-
 };
 
 SCg.LayoutAlgorithmForceBased.prototype.start = function () {
-    this.stop();
-
     // init D3 force layout
     let self = this;
-
-    this.force = d3.layout.force()
+    self.force = d3.layout.force()
         .nodes(this.nodes)
         .links(this.edges)
         .size(this.rect)
@@ -146,7 +142,9 @@ SCg.LayoutManager.prototype.init = function (scene) {
 /**
  * Prepare objects for layout
  */
-SCg.LayoutManager.prototype.prepareObjects = function () {
+SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes, sceneLinks, sceneEdges, sceneContours) {
+    let self = this;
+
     this.nodes = {};
     this.edges = {};
     let objDict = {};
@@ -164,9 +162,7 @@ SCg.LayoutManager.prototype.prepareObjects = function () {
     }
 
     // first of all we need to collect objects from scene, and build them representation for layout
-    for (let idx in this.scene.nodes) {
-        const node = this.scene.nodes[idx];
-
+    const matchLayoutNode = function (node) {
         let obj = {};
         obj.x = node.position.x;
         obj.y = node.position.y;
@@ -176,12 +172,12 @@ SCg.LayoutManager.prototype.prepareObjects = function () {
 
         objDict[node.id] = obj;
 
-        appendElement(obj, this.nodes);
+        if (sceneNodes.includes(node)) return;
+
+        appendElement(obj, self.nodes);
     }
 
-    for (let idx in this.scene.links) {
-        const link = this.scene.links[idx];
-
+    const matchLayoutLink = function (link) {
         let obj = {};
         obj.x = link.position.x;
         obj.y = link.position.y;
@@ -191,12 +187,12 @@ SCg.LayoutManager.prototype.prepareObjects = function () {
 
         objDict[link.id] = obj;
 
-        appendElement(obj, this.nodes);
+        if (sceneLinks.includes(link)) return;
+
+        appendElement(obj, self.nodes);
     }
 
-    for (let idx in this.scene.edges) {
-        const edge = this.scene.edges[idx];
-
+    const matchLayoutEdge = function (edge) {
         let obj = {};
         obj.object = edge;
         obj.type = SCgLayoutObjectType.Edge;
@@ -204,12 +200,12 @@ SCg.LayoutManager.prototype.prepareObjects = function () {
 
         objDict[edge.id] = obj;
 
-        appendElement(obj, this.edges);
+        if (sceneEdges.includes(edge)) return;
+
+        appendElement(obj, self.edges);
     }
 
-    for (let idx in this.scene.contours) {
-        const contour = this.scene.contours[idx];
-
+    const matchLayoutContour = function (contour) {
         let obj = {};
         obj.x = contour.position.x;
         obj.y = contour.position.y;
@@ -218,7 +214,23 @@ SCg.LayoutManager.prototype.prepareObjects = function () {
 
         objDict[contour.id] = obj;
 
-        appendElement(obj, this.nodes);
+        if (sceneContours.includes(contour)) return;
+
+        appendElement(obj, self.nodes);
+    }
+
+    for (let key in this.scene.objects) {
+        const object = this.scene.objects[key];
+
+        if (object instanceof SCg.ModelNode) {
+            matchLayoutNode(object);
+        } else if (object instanceof SCg.ModelLink) {
+            matchLayoutLink(object);
+        } else if (object instanceof SCg.ModelEdge) {
+            matchLayoutEdge(object);
+        } else if (object instanceof SCg.ModelContour) {
+            matchLayoutContour(object);
+        }
     }
 
     // store begin and end for edges
@@ -256,13 +268,13 @@ SCg.LayoutManager.prototype.prepareObjects = function () {
 /**
  * Starts layout in scene
  */
-SCg.LayoutManager.prototype.doLayout = function () {
+SCg.LayoutManager.prototype.doLayout = function (sceneNodes, sceneLinks, sceneEdges, sceneContours) {
     if (this.algorithm) {
         this.algorithm.stop();
         delete this.algorithm;
     }
 
-    this.prepareObjects();
+    this.prepareObjects(sceneNodes, sceneLinks, sceneEdges, sceneContours);
     this.algorithm = new SCg.LayoutAlgorithmForceBased(this.nodes[0], this.edges[0], null,
         $.proxy(this.onTickUpdate, this),
         this.scene.getContainerSize());

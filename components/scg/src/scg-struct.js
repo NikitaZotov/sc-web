@@ -1,28 +1,8 @@
-const debouncedBuffered = (func, wait) => {
-    let timerId;
-
-    const clear = () => {
-        clearTimeout(timerId);
-    };
-    const debouncedBuffered = (tasks, maxBatchLength) => {
-        clearTimeout(timerId);
-        timerId = setTimeout(() => func(tasks.splice(0, tasksLength)), wait);
-
-        const tasksLength = tasks.length;
-        if (tasksLength === maxBatchLength) {
-            const batch = tasks.splice(0, Math.max(maxBatchLength, tasksLength));
-            func(batch);
-        }
-    };
-
-    return [debouncedBuffered, clear];
-};
-
 const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
     let appendTasks = [],
         addrsToAppendTasks = {},
         removeTasks = [],
-        maxAppendBatchLength = 150,
+        maxAppendBatchLength = 24,
         maxRemoveBatchLength = 20,
         batchDelayTime = 200,
         defaultObjectStyles = { node: 1.8, link: 1.5, opacity: 1, widthEdge: 7.5, stroke: '#1E90FF', fill: '#1E90FF' },
@@ -39,14 +19,49 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
         return new SCg.Vector3(100 * Math.random(), 100 * Math.random(), 0);
     }
 
+    const debouncedBuffered = (func, wait) => {
+        let timerId;
+
+        const clear = () => {
+            clearTimeout(timerId);
+        };
+
+        const debouncedBuffered = (tasks, maxBatchLength) => {
+            clearTimeout(timerId);
+            timerId = setTimeout(() => {
+                func(tasks.splice(0, tasks.length));
+                tasks.splice(0, tasks.length);
+            }, wait);
+
+            if (tasks.length === maxBatchLength) {
+                const batch = tasks.splice(0, Math.max(tasks.length, maxBatchLength));
+                func(batch);
+            }
+        };
+
+        return [debouncedBuffered, clear];
+    };
+
     const doAppendBatch = function (batch) {
+        const nodes = [];
+        const links = [];
+        const edges = [];
+
+        const appendObject = function (object) {
+            if (object instanceof SCg.ModelNode) {
+                nodes.push(object);
+            } else if (object instanceof SCg.ModelEdge) {
+                edges.push(object);
+            } else {
+                links.push(object);
+            }
+        }
+
         for (let i in batch) {
             const task = batch[i];
             const addr = task[0];
             const type = task[1];
             let styles = task[2];
-
-            console.log(task);
 
             delete addrsToAppendTasks[addr];
 
@@ -55,16 +70,20 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
             let object = editor.scene.getObjectByScAddr(addr);
             if (object) {
                 if (styles) {
-                    if (object instanceof SCg.ModelEdge) {
+                    if (object instanceof SCg.ModelNode) {
+                        object.setScaleElem(styles.node);
+                    } else if (object instanceof SCg.ModelEdge) {
                         object.setWidthEdge(styles.widthEdge);
                     } else {
-                        object.setScaleElem(object instanceof SCg.ModelNode ? styles.node : styles.link);
+                        object.setScaleElem(styles.link);
                     }
 
                     object.setStrokeElem(styles.stroke);
                     object.setFillElem(styles.fill);
                     object.setOpacityElem(styles.opacity);
                 }
+
+                appendObject(object);
                 continue;
             }
 
@@ -73,8 +92,8 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
                 if (styles) object.setScaleElem(styles.node);
                 resolveIdtf(addr, object);
             } else if (type & sc_type_arc_mask) {
-                let bObj = editor.scene.getObjectByScAddr(task[3]);
-                let eObj = editor.scene.getObjectByScAddr(task[4]);
+                const bObj = editor.scene.getObjectByScAddr(task[3]);
+                const eObj = editor.scene.getObjectByScAddr(task[4]);
                 if (!bObj || !eObj) {
                     delete appendTasks[i];
 
@@ -91,6 +110,7 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
                 object = SCg.Creator.createLink(type, randomPos(), containerId);
 
                 if (styles) object.setScaleElem(styles.link);
+                resolveIdtf(addr, object);
             }
 
             if (styles) {
@@ -103,10 +123,11 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
             editor.scene.objects[addr] = object;
             object.setScAddr(addr);
             object.setObjectState(SCgObjectState.FromMemory);
+
+            appendObject(object);
         }
 
-        editor.render.update();
-        editor.scene.layout();
+        editor.scene.layout(nodes, links, edges, []);
     };
 
     const [debouncedBufferedDoAppendBatch] = debouncedBuffered(doAppendBatch, batchDelayTime);
@@ -132,7 +153,6 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
             editor.scene.deleteObjects([obj]);
         }
         editor.render.update();
-        editor.scene.layout();
     }
 
     const [debouncedBufferedDoRemoveBatch] = debouncedBuffered(doRemoveBatch, batchDelayTime);

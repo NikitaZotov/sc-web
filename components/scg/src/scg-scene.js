@@ -316,8 +316,13 @@ SCg.Scene.prototype = {
     },
 
     // --------- layout --------
-    layout: function () {
-        this.layout_manager.doLayout();
+    layout: function (sceneNodes, sceneLinks, sceneEdges, sceneContours) {
+        sceneNodes ??= this.nodes;
+        sceneLinks ??= this.links;
+        sceneEdges ??= this.edges;
+        sceneContours ??= this.contours;
+
+        this.layout_manager.doLayout(sceneNodes, sceneLinks, sceneEdges, sceneContours);
         this.render.update();
     },
 
