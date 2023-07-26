@@ -712,7 +712,7 @@ SCWeb.core.ComponentSandbox.prototype.updateContent = async function (scAddr, sc
     }
 
     if (this.is_struct && this.eventStructUpdate) {
-        if (SCWeb.core.Main.mode === SCgEditMode.SCgModeViewOnly) {
+        if (SCWeb.core.Main.viewMode === SCgViewMode.DistanceBasedSCgView) {
             updateScgViewOnlyWindow(sceneAddr).then(null);
         } else {
             updateScgWindow(sceneAddr).then(null);

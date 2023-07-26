@@ -83,7 +83,8 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
                     delete appendTasks[i];
 
                     // Not call addAppendTask because scg-filters are used
-                    addAppendTask(addr, task);
+                    addrsToAppendTasks[addr] = appendTasks.length;
+                    appendTasks.push(task);
                     continue;
                 }
                 object = SCg.Creator.createEdge(bObj, eObj, type);
