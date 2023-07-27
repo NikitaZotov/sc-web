@@ -9,13 +9,13 @@ const SCgEditMode = {
     SCgModeBus: 2,
     SCgModeContour: 3,
     SCgModeLink: 4,
-    SCgModeViewOnly: 5,
+    SCgViewOnly: 5,
 
     /**
      * Check if specified mode is valid
      */
     isValid: function (mode) {
-        return (mode >= this.SCgModeSelect) && (mode <= this.SCgModeViewOnly);
+        return (mode >= this.SCgModeSelect) && (mode <= this.SCgViewOnly);
     }
 };
 
@@ -31,10 +31,10 @@ const SCgViewMode = {
     }
 };
 
-// backward compatibility [scg_just_view <- scg_view_only_mode]
+// backward compatibility [scg_just_view <- scg_view_only]
 const editModes = {
-    'scg_just_view': SCgEditMode.SCgModeViewOnly,
-    'scg_view_only_mode': SCgEditMode.SCgModeViewOnly,
+    'scg_just_view': SCgEditMode.SCgViewOnly,
+    'scg_view_only': SCgEditMode.SCgViewOnly,
 };
 
 const viewModes = {
@@ -184,7 +184,7 @@ SCWeb.core.Main = {
 
         this.waitForElm('.scg-tools-panel').then(() => {
             if (hideTools) {
-                SCWeb.core.Main.editMode === SCgEditMode.SCgModeViewOnly
+                SCWeb.core.Main.editMode === SCgEditMode.SCgViewOnly
                     ? $('.scg-tools-panel').css({ 'display': 'block' })
                     : $('.scg-tools-panel').css({ 'display': 'none' });
             }

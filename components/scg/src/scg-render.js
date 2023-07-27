@@ -241,7 +241,7 @@ SCg.Render.prototype = {
                         self.sandbox.updateContent(d.sc_addr, self.scene);
                 })
                 .on("dblclick", d => {
-                    if (SCWeb.core.Main.editMode === SCgEditMode.SCgModeViewOnly) return;
+                    if (SCWeb.core.Main.editMode === SCgEditMode.SCgViewOnly) return;
                     if (SCWeb.core.Main.viewMode === SCgViewMode.DistanceBasedSCgView) return;
 
                     if (!d.sc_addr) return;
