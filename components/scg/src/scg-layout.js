@@ -3,16 +3,21 @@
 
 function SCgLayoutNode(object) {
     this.random = (a, b) => {
-        return Math.random() * 10 % 2 ? a : b;
+        return Math.round(Math.random() * 10) % 2 ? a : b;
     };
 
     this.object = object;
     this.acceleration = new SCg.Vector3(0, 0, 0);
-    this.velocity = new SCg.Vector3(this.random(-1, 1), this.random(-1, 1), this.random(-1, 1));
+    this.step = 0.2;
+    this.velocity = new SCg.Vector3(
+        this.random(-this.step, this.step),
+        this.random(-this.step, this.step),
+        this.random(-this.step, this.step)
+    );
     // this.r = 3.0;
     this.position = object.position;
     this.maxspeed = 3;    // Maximum speed
-    this.maxforce = 0.05; // Maximum steering force
+    this.maxforce = 0.02; // Maximum steering force
 }
 
 SCgLayoutNode.prototype.run = function(nodes) {
@@ -29,11 +34,8 @@ SCgLayoutNode.prototype.applyForce = function(force) {
 // We accumulate a new acceleration each time based on three rules
 SCgLayoutNode.prototype.flock = function(nodes) {
     let sep = this.separate(nodes);   // Separation
-    console.log('sep', sep);
     let ali = this.align(nodes);      // Alignment
-    console.log('ali', ali);
     let coh = this.cohesion(nodes);   // Cohesion
-    console.log('coh', coh);
     // Arbitrarily weight these forces
     sep.multiplyScalar(1.5);
     ali.multiplyScalar(1.0);
@@ -50,6 +52,7 @@ SCgLayoutNode.prototype.update = function() {
     this.velocity.add(this.acceleration);
     // Limit speed
     this.velocity.limit(this.maxspeed);
+    console.log('velocity', this.velocity.x, this.velocity.y)
     this.position.add(this.velocity);
     // Reset acceleration to 0 each cycle
     this.acceleration.multiplyScalar(0);
@@ -160,7 +163,6 @@ SCgLayoutNode.prototype.cohesion = function(nodes) {
 // ------------------------------------
 
 SCg.LayoutManager = function () {
-
 };
 
 SCg.LayoutManager.prototype = {
@@ -169,22 +171,19 @@ SCg.LayoutManager.prototype = {
 
 SCg.LayoutManager.prototype.init = function (scene) {
     this.scene = scene;
-    this.nodes = null;
-    this.edges = null;
-
-    this.algorithm = null;
-};
-
-/**
- * Prepare objects for layout
- */
-SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes) {
     this.nodes = {};
     this.edges = {};
 
     this.nodes[0] = [];
     this.edges[0] = [];
 
+    this.nodesDict = {};
+};
+
+/**
+ * Prepare objects for layout
+ */
+SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes) {
     const appendElement = (element, elements) => {
         const contour = element.contour ? element.contour.sc_addr : 0;
         if (!elements[contour]) {
@@ -197,6 +196,9 @@ SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes) {
     // first of all we need to collect objects from scene, and build them representation for layout
     for (let idx in sceneNodes) {
         const node = sceneNodes[idx];
+        if (this.nodesDict[node.id]) continue;
+
+        this.nodesDict[node.id] = node;
         appendElement(node, this.nodes);
     }
 };
@@ -205,12 +207,19 @@ SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes) {
  * Starts layout in scene
  */
 SCg.LayoutManager.prototype.doLayout = function () {
+    console.log('do layout')
     this.prepareObjects(this.scene.nodes);
-    for (let j = 0; j < 1; j++) {
-        for (let i = 0; i < this.nodes[0].length; i++) {
-            this.nodes[0][i].run(this.nodes[0]);  // Passing the entire list of nodes to each node individually
-            this.onTickUpdate(this.nodes[0]);
+    for (let b = 0; b < 50; ++b) {
+        const layoutNodes = this.nodes[0];
+
+        for (let i = 0; i < layoutNodes.length; ++i) {
+            const node = layoutNodes[i];
+
+            node.run(layoutNodes);  // Passing the entire list of nodes to each node individually
+            this.onTickUpdate([node]);
         }
+
+        this.onTickUpdate(layoutNodes);
     }
 };
 

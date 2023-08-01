@@ -103,12 +103,22 @@ SCg.Render.prototype = {
                 self.scene.listener.finishCreation();
                 d3.event.stopPropagation();
             });
-        this.d3_edges = this.d3_container.append('svg:g').selectAll('path');
-        this.d3_buses = this.d3_container.append('svg:g').selectAll('path');
-        this.d3_nodes = this.d3_container.append('svg:g').selectAll('g');
-        this.d3_links = this.d3_container.append('svg:g').selectAll('g');
-        this.d3_dragline = this.d3_container.append('svg:g');
-        this.d3_line_points = this.d3_container.append('svg:g');
+        this.d3_edges = this.d3_container.append('svg:g')
+            .attr('class', 'edges')
+            .selectAll('path');
+        this.d3_buses = this.d3_container.append('svg:g')
+            .attr('class', 'buses')
+            .selectAll('path');
+        this.d3_nodes = this.d3_container.append('svg:g')
+            .attr('class', 'nodes')
+            .selectAll('g');
+        this.d3_links = this.d3_container.append('svg:g')
+            .attr('class', 'links')
+            .selectAll('g');
+        this.d3_dragline = this.d3_container.append('svg:g')
+            .attr('class', 'dragline');
+        this.d3_line_points = this.d3_container.append('svg:g')
+            .attr('class', 'linepoints');
 
         this.line_point_idx = -1;
     },
@@ -288,42 +298,28 @@ SCg.Render.prototype = {
     },
 
     updateNodes: function (nodes) {
-        let self = this;
+        let nodesDict = {};
+        nodes.forEach(node => nodesDict[node.id] = node);
 
-        this.d3_nodes = this.d3_nodes.data(nodes, function (d) {
+        this.d3_nodes = this.d3_container.select('[class="nodes"]').selectAll('g').data(nodes, function (d) {
             return d.id;
         });
 
-        let g = this.d3_nodes.enter().append('svg:g')
-            .attr('class', function (d) {
-                return self.classState(d, (d.sc_type & sc_type_constancy_mask) ? 'SCgNode' : 'SCgNodeEmpty');
-            })
-            .attr("transform", function (d) {
-                return 'translate(' + d.position.x + ', ' + d.position.y + ')';
-            });
-        this.eventsWrap(g);
-        this.appendNodeVisual(g);
-
-        g.append('svg:text')
-            .attr('class', 'SCgText')
-            .attr('x', function (d) {
-                return d.scale.x / 1.3;
-            })
-            .attr('y', function (d) {
-                return d.scale.y / 1.3;
-            })
-            .text(function (d) {
-                return d.text;
-            });
-
-        this.d3_nodes.remove();
+        this.d3_nodes.attr("transform", function (d) {
+            const node = nodesDict[d.id];
+            return 'translate(' + node.position.x + ', ' + node.position.y + ')scale(' + node.scaleElem + ')';
+        })
+        .selectAll('text').text(function (d) {
+            const node = nodesDict[d.id];
+            return node.text;
+        });
     },
 
     // -------------- draw -----------------------
     update: function () {
     },
 
-    updateRemovedObjects: function (removableObjects) {
+    remove: function (removableObjects) {
         function eventsUnwrap(selector) {
             selector.on('mouseover', null)
                 .on('mouseout', null)
@@ -332,16 +328,6 @@ SCg.Render.prototype = {
                 .on("dblclick", null);
         }
 
-        const objects = this.d3_container.append('svg:g').selectAll('g');
-        const d3_removable_objects = objects.data(removableObjects, function (d) {
-            return d.id;
-        });
-
-        const g = d3_removable_objects.enter().append('svg:g');
-
-        eventsUnwrap(g);
-
-        d3_removable_objects.exit().remove();
     },
 
     // -------------- update objects --------------------------

@@ -162,7 +162,7 @@ SCg.Vector3.prototype = {
        return this.mult(other);
     },
 
-    mulProduct: function (other) {
+    multProduct: function (other) {
         return new SCg.Vector3(
             this.x * other.x,
             this.y * other.y,
