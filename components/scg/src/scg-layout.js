@@ -1,129 +1,161 @@
-const SCgLayoutObjectType = {
-    Node: 0,
-    Edge: 1,
-    Link: 2,
-    Contour: 3,
-    DotPoint: 4
-};
+// SCgLayoutNode class
+// Methods for Separation, Cohesion, Alignment added
 
-// Layout algorithms
+function SCgLayoutNode(object) {
+    this.random = (a, b) => {
+        return Math.random() * 10 % 2 ? a : b;
+    };
 
+    this.object = object;
+    this.acceleration = new SCg.Vector3(0, 0, 0);
+    this.velocity = new SCg.Vector3(this.random(-1, 1), this.random(-1, 1), this.random(-1, 1));
+    // this.r = 3.0;
+    this.position = object.position;
+    this.maxspeed = 3;    // Maximum speed
+    this.maxforce = 0.05; // Maximum steering force
+}
 
-/**
- * Base layout algorithm
- */
-SCg.LayoutAlgorithm = function (nodes, edges, contours, onTickUpdate) {
-    this.nodes = nodes;
-    this.edges = edges;
-    this.contours = contours;
-    this.onTickUpdate = onTickUpdate;
-};
+SCgLayoutNode.prototype.run = function(nodes) {
+    this.flock(nodes);
+    this.update();
+    this.borders();
+}
 
-SCg.LayoutAlgorithm.prototype = {
-    constructor: SCg.LayoutAlgorithm
-};
+SCgLayoutNode.prototype.applyForce = function(force) {
+    // We could add mass here if we want A = F / M
+    this.acceleration.add(force);
+}
 
-// --------------------------
+// We accumulate a new acceleration each time based on three rules
+SCgLayoutNode.prototype.flock = function(nodes) {
+    let sep = this.separate(nodes);   // Separation
+    console.log('sep', sep);
+    let ali = this.align(nodes);      // Alignment
+    console.log('ali', ali);
+    let coh = this.cohesion(nodes);   // Cohesion
+    console.log('coh', coh);
+    // Arbitrarily weight these forces
+    sep.multiplyScalar(1.5);
+    ali.multiplyScalar(1.0);
+    coh.multiplyScalar(1.0);
+    // Add the force vectors to acceleration
+    this.applyForce(sep);
+    this.applyForce(ali);
+    this.applyForce(coh);
+}
 
-SCg.LayoutAlgorithmForceBased = function (nodes, edges, contours, onTickUpdate, rect) {
-    SCg.LayoutAlgorithm.call(this, nodes, edges, contours, onTickUpdate);
-    this.rect = rect;
-};
+// Method to update location
+SCgLayoutNode.prototype.update = function() {
+    // Update velocity
+    this.velocity.add(this.acceleration);
+    // Limit speed
+    this.velocity.limit(this.maxspeed);
+    this.position.add(this.velocity);
+    // Reset acceleration to 0 each cycle
+    this.acceleration.multiplyScalar(0);
+}
 
-SCg.LayoutAlgorithmForceBased.prototype = Object.create(SCg.LayoutAlgorithm);
+// A method that calculates and applies a steering force towards a target
+// STEER = DESIRED MINUS VELOCITY
+SCgLayoutNode.prototype.seek = function(target) {
+    let desired = target.subProduct(this.position);  // A vector pointing from the location to the target
+    // Normalize desired and scale to maximum speed
+    desired.normalize();
+    desired.multiplyScalar(this.maxspeed);
+    // Steering = Desired minus Velocity
+    let steer = desired.subProduct(this.velocity);
+    steer.limit(this.maxforce);  // Limit to maximum steering force
+    return steer;
+}
 
-SCg.LayoutAlgorithmForceBased.prototype.destroy = function () {
-    this.stop();
-};
+// Wraparound
+SCgLayoutNode.prototype.borders = function() {
+    // if (this.position.x < -this.r) this.position.x = width + this.r;
+    // if (this.position.y < -this.r) this.position.y = height + this.r;
+    // if (this.position.x > width + this.r) this.position.x = -this.r;
+    // if (this.position.y > height + this.r) this.position.y = -this.r;
+}
 
-SCg.LayoutAlgorithmForceBased.prototype.stop = function () {
-    if (this.force) {
-        this.force.stop();
-        delete this.force;
-        this.force = null;
-    }
-
-};
-
-SCg.LayoutAlgorithmForceBased.prototype.start = function () {
-    this.stop();
-
-    // init D3 force layout
-    let self = this;
-
-    this.force = d3.layout.force()
-        .nodes(this.nodes)
-        .links(this.edges)
-        .size(this.rect)
-        .friction(0.5)
-        .gravity(0.03)
-        .linkDistance(function (edge) {
-            const p1 = edge.source.object.getConnectionPos(edge.target.object.position, edge.object.source_dot);
-            const p2 = edge.target.object.getConnectionPos(edge.source.object.position, edge.object.target_dot);
-            const cd = edge.source.object.position.clone().sub(edge.target.object.position).length();
-            const d = cd - p1.sub(p2).length();
-
-            if (edge.source.type == SCgLayoutObjectType.DotPoint ||
-                edge.target.type == SCgLayoutObjectType.DotPoint) {
-                return d + 50;
-            }
-
-            return 100 + d;
-        })
-        .linkStrength(function (edge) {
-            if (edge.source.type == SCgLayoutObjectType.DotPoint ||
-                edge.target.type == SCgLayoutObjectType.DotPoint) {
-                return 1;
-            }
-
-            return 0.3;
-        })
-        .charge(function (node) {
-            if (node.type == SCgLayoutObjectType.DotPoint) {
-                return 0;
-            } else if (node.type == SCgLayoutObjectType.Link) {
-                return -900;
-            }
-
-            return -700;
-        })
-        .on('tick', function () {
-            self.onLayoutTick();
-        })
-        .start();
-};
-
-SCg.LayoutAlgorithmForceBased.prototype.onLayoutTick = function () {
-    let dots = [];
-    for (let idx in this.nodes) {
-        const node_layout = this.nodes[idx];
-
-        if (node_layout.type === SCgLayoutObjectType.Node) {
-            node_layout.object.setPosition(new SCg.Vector3(node_layout.x, node_layout.y, 0));
-        } else if (node_layout.type === SCgLayoutObjectType.Link) {
-            node_layout.object.setPosition(new SCg.Vector3(node_layout.x, node_layout.y, 0));
-        } else if (node_layout.type === SCgLayoutObjectType.DotPoint) {
-            dots.push(node_layout);
-        } else if (node_layout.type === SCgLayoutObjectType.Contour) {
-            node_layout.object.setPosition(new SCg.Vector3(node_layout.x, node_layout.y, 0));
+// Separation
+// Method checks for nearby nodes and steers away
+SCgLayoutNode.prototype.separate = function(nodes) {
+    let desiredSeparation = 25.0;
+    let steer = new SCg.Vector3(0, 0, 0);
+    let count = 0;
+    // For every node in the system, check if it's too close
+    for (let i = 0; i < nodes.length; i++) {
+        let d = this.position.distance(nodes[i].position);
+        // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
+        if ((d > 0) && (d < desiredSeparation)) {
+            // Calculate vector pointing away from neighbor
+            let diff = this.position.subProduct(nodes[i].position);
+            diff.normalize();
+            diff.divideScalar(d);        // Weight by distance
+            steer.add(diff);
+            count++;            // Keep track of how many
         }
     }
-
-    // setup dot points positions 
-    for (let idx in dots) {
-        const dot = dots[idx];
-
-        let edge = dot.object.target;
-        if (dot.source)
-            edge = dot.object.source;
-
-        dot.x = edge.position.x;
-        dot.y = edge.position.y;
+    // Average -- divide by how many
+    if (count > 0) {
+        steer.divideScalar(count);
     }
 
-    this.onTickUpdate();
-};
+    // As long as the vector is greater than 0
+    if (steer.length() > 0) {
+        // Implement Reynolds: Steering = Desired - Velocity
+        steer.normalize();
+        steer.multiplyScalar(this.maxspeed);
+        steer.sub(this.velocity);
+        steer.limit(this.maxforce);
+    }
+    return steer;
+}
 
+// Alignment
+// For every nearby node in the system, calculate the average velocity
+SCgLayoutNode.prototype.align = function(nodes) {
+    let neighborDist = 50;
+    let sum = new SCg.Vector3(0, 0, 0);
+    let count = 0;
+    for (let i = 0; i < nodes.length; i++) {
+        let d = this.position.distance(nodes[i].position);
+        if ((d > 0) && (d < neighborDist)) {
+            sum.add(nodes[i].velocity);
+            count++;
+        }
+    }
+    if (count > 0) {
+        sum.divideScalar(count);
+        sum.normalize();
+        sum.multiplyScalar(this.maxspeed);
+        let steer = sum.subProduct(this.velocity);
+        steer.limit(this.maxforce);
+        return steer;
+    } else {
+        return new SCg.Vector3(0, 0, 0);
+    }
+}
+
+// Cohesion
+// For the average location (i.e. center) of all nearby nodes, calculate steering vector towards that location
+SCgLayoutNode.prototype.cohesion = function(nodes) {
+    let neighborDist = 50;
+    let sum = new SCg.Vector3(0, 0, 0);   // Start with empty vector to accumulate all locations
+    let count = 0;
+    for (let i = 0; i < nodes.length; i++) {
+        let d = this.position.distance(nodes[i].position);
+        if ((d > 0) && (d < neighborDist)) {
+            sum.add(nodes[i].position); // Add location
+            count++;
+        }
+    }
+    if (count > 0) {
+        sum.divideScalar(count);
+        return this.seek(sum);  // Steer towards the location
+    } else {
+        return new SCg.Vector3(0, 0, 0);
+    }
+}
 
 // ------------------------------------
 
@@ -146,10 +178,9 @@ SCg.LayoutManager.prototype.init = function (scene) {
 /**
  * Prepare objects for layout
  */
-SCg.LayoutManager.prototype.prepareObjects = function () {
+SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes) {
     this.nodes = {};
     this.edges = {};
-    let objDict = {};
 
     this.nodes[0] = [];
     this.edges[0] = [];
@@ -160,96 +191,13 @@ SCg.LayoutManager.prototype.prepareObjects = function () {
             elements[contour] = [];
         }
 
-        elements[contour].push(element);
+        elements[contour].push(new SCgLayoutNode(element));
     }
 
     // first of all we need to collect objects from scene, and build them representation for layout
-    for (let idx in this.scene.nodes) {
-        const node = this.scene.nodes[idx];
-
-        let obj = {};
-        obj.x = node.position.x;
-        obj.y = node.position.y;
-        obj.object = node;
-        obj.type = SCgLayoutObjectType.Node;
-        obj.contour = node.contour;
-
-        objDict[node.id] = obj;
-
-        appendElement(obj, this.nodes);
-    }
-
-    for (let idx in this.scene.links) {
-        const link = this.scene.links[idx];
-
-        let obj = {};
-        obj.x = link.position.x;
-        obj.y = link.position.y;
-        obj.object = link;
-        obj.type = SCgLayoutObjectType.Link;
-        obj.contour = link.contour;
-
-        objDict[link.id] = obj;
-
-        appendElement(obj, this.nodes);
-    }
-
-    for (let idx in this.scene.edges) {
-        const edge = this.scene.edges[idx];
-
-        let obj = {};
-        obj.object = edge;
-        obj.type = SCgLayoutObjectType.Edge;
-        obj.contour = edge.contour;
-
-        objDict[edge.id] = obj;
-
-        appendElement(obj, this.edges);
-    }
-
-    for (let idx in this.scene.contours) {
-        const contour = this.scene.contours[idx];
-
-        let obj = {};
-        obj.x = contour.position.x;
-        obj.y = contour.position.y;
-        obj.object = contour;
-        obj.type = SCgLayoutObjectType.Contour;
-
-        objDict[contour.id] = obj;
-
-        appendElement(obj, this.nodes);
-    }
-
-    // store begin and end for edges
-    for (let key in this.edges) {
-        const edges = this.edges[key];
-        for (let idx in edges) {
-            const edge = edges[idx];
-
-            let source = objDict[edge.object.source.id];
-            let target = objDict[edge.object.target.id];
-
-            function getEdgeObj(srcObj, isSource) {
-                if (srcObj.type === SCgLayoutObjectType.Edge) {
-                    let obj = {};
-                    obj.type = SCgLayoutObjectType.DotPoint;
-                    obj.object = srcObj.object;
-                    obj.source = isSource;
-
-                    return obj;
-                }
-                return srcObj;
-            }
-
-            edge.source = getEdgeObj(source, true);
-            edge.target = getEdgeObj(target, false);
-
-            if (edge.source !== source)
-                appendElement(edge.source, this.nodes);
-            if (edge.target !== target)
-                appendElement(edge.target, this.nodes);
-        }
+    for (let idx in sceneNodes) {
+        const node = sceneNodes[idx];
+        appendElement(node, this.nodes);
     }
 };
 
@@ -257,19 +205,16 @@ SCg.LayoutManager.prototype.prepareObjects = function () {
  * Starts layout in scene
  */
 SCg.LayoutManager.prototype.doLayout = function () {
-    if (this.algorithm) {
-        this.algorithm.stop();
-        delete this.algorithm;
+    this.prepareObjects(this.scene.nodes);
+    for (let j = 0; j < 1; j++) {
+        for (let i = 0; i < this.nodes[0].length; i++) {
+            this.nodes[0][i].run(this.nodes[0]);  // Passing the entire list of nodes to each node individually
+            this.onTickUpdate(this.nodes[0]);
+        }
     }
-
-    this.prepareObjects();
-    this.algorithm = new SCg.LayoutAlgorithmForceBased(this.nodes[0], this.edges[0], null,
-        $.proxy(this.onTickUpdate, this),
-        this.scene.getContainerSize());
-    this.algorithm.start();
 };
 
-SCg.LayoutManager.prototype.onTickUpdate = function () {
-    this.scene.updateObjectsVisual();
+SCg.LayoutManager.prototype.onTickUpdate = function (nodes) {
+    this.scene.render.updateNodes(nodes.map(node => node.object));
     this.scene.pointed_object = null;
 };

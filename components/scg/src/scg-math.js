@@ -67,13 +67,13 @@ SCg.Vector2.prototype = {
 
     distanceSquared: function () {
         if (arguments.length === 2) {
-            var x = this.x - arguments[0],
+            const x = this.x - arguments[0],
                 y = this.y - arguments[1];
 
             return x * x + y * y;
         }
 
-        var x = this.x - arguments[0].x,
+        const x = this.x - arguments[0].x,
             y = this.y - arguments[0].y;
         return x * x + y * y;
     },
@@ -103,7 +103,7 @@ SCg.Vector3.prototype = {
     constructor: SCg.Vector3,
 
     equals: function (other) {
-        return this.x == other.x && this.y == other.y && this.z == other.z;
+        return this.x === other.x && this.y === other.y && this.z === other.z;
     },
 
     copyFrom: function (other) {
@@ -126,6 +126,14 @@ SCg.Vector3.prototype = {
         return this;
     },
 
+    subProduct: function (other) {
+        return new SCg.Vector3(
+            this.x - other.x,
+            this.y - other.y,
+            this.z - other.z
+        );
+    },
+
     add: function (other) {
         this.x += other.x;
         this.y += other.y;
@@ -134,12 +142,32 @@ SCg.Vector3.prototype = {
         return this;
     },
 
-    mul: function (other) {
+    addProduct: function (other) {
+        return new SCg.Vector3(
+            this.x + other.x,
+            this.y + other.y,
+            this.z + other.z
+        );
+    },
+
+    mult: function (other) {
         this.x *= other.x;
         this.y *= other.y;
         this.z *= other.z;
 
         return this;
+    },
+
+    mul: function (other) {
+       return this.mult(other);
+    },
+
+    mulProduct: function (other) {
+        return new SCg.Vector3(
+            this.x * other.x,
+            this.y * other.y,
+            this.z * other.z
+        );
     },
 
     div: function (other) {
@@ -148,6 +176,14 @@ SCg.Vector3.prototype = {
         this.z /= other.z;
 
         return this;
+    },
+
+    divProduct: function (other) {
+        return new SCg.Vector3(
+            this.x / other.x,
+            this.y / other.y,
+            this.z / other.z
+        );
     },
 
     multiplyScalar: function (v) {
@@ -159,10 +195,17 @@ SCg.Vector3.prototype = {
     },
 
     normalize: function () {
-        var l = this.length();
+        const l = this.length();
         this.x /= l;
         this.y /= l;
         this.z /= l;
+    },
+
+    divideScalar: function (v) {
+        this.x /= v;
+        this.y /= v;
+        this.z /= v;
+        return this;
     },
 
     length: function () {
@@ -182,6 +225,38 @@ SCg.Vector3.prototype = {
             this.y * other.z - this.z * other.y,
             this.z * other.x - this.x * other.z,
             this.x * other.y - this.y * other.x);
+    },
+
+    distance: function () {
+        return Math.sqrt(this.distanceSquared.apply(this, arguments));
+    },
+
+    distanceSquared: function () {
+        if (arguments.length === 3) {
+            const x = this.x - arguments[0],
+                y = this.y - arguments[1],
+                z = this.z - arguments[2];
+
+            return x * x + y * y + z * z;
+        }
+
+        const x = this.x - arguments[0].x,
+            y = this.y - arguments[0].y,
+            z = this.z - arguments[0].z;
+        return x * x + y * y + z * z;
+    },
+
+    limit: function(maxMagnitude) {
+        const magnitude = Math.sqrt(this.x ** 2 + this.y ** 2 + this.z ** 2);
+
+        if (magnitude > maxMagnitude) {
+            const scaleFactor = maxMagnitude / magnitude;
+            this.x *= scaleFactor;
+            this.y *= scaleFactor;
+            this.z *= scaleFactor;
+        }
+
+        return this;
     },
 
     to2d: function () {

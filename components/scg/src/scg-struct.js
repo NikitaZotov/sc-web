@@ -16,7 +16,7 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
     }
 
     function randomPos() {
-        return new SCg.Vector3(100 * Math.random(), 100 * Math.random(), 0);
+        return new SCg.Vector3(100 * Math.random() + 500, 100 * Math.random() + 500, 0);
     }
 
     const debounceBuffered = (func, wait) => {
@@ -44,6 +44,18 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
     };
 
     const doAppendBatch = function (batch) {
+        let sceneNodes = [];
+
+        const appendObject = function (object) {
+            if (object instanceof SCg.ModelNode) {
+                sceneNodes.push(object);
+            } else if (object instanceof SCg.ModelEdge) {
+
+            } else {
+
+            }
+        };
+
         for (let i in batch) {
             const task = batch[i];
             const addr = task[0];
@@ -108,11 +120,11 @@ const SCgStructFromScTranslatorImpl = function (_editor, _sandbox) {
             editor.scene.objects[addr] = object;
             object.setScAddr(addr);
             object.setObjectState(SCgObjectState.FromMemory);
+
+            appendObject(object);
         }
 
-        (async () => {
-            sandbox.layout();
-        })();
+        sandbox.layout(sceneNodes);
     };
 
     const [debouncedBufferedDoAppendBatch] = debounceBuffered(doAppendBatch, batchDelayTime);

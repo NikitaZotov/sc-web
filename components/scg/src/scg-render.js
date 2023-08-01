@@ -163,8 +163,7 @@ SCg.Render.prototype = {
     },
 
     classState: function (obj, base) {
-
-        var res = 'sc-no-default-cmd ui-no-tooltip SCgElement';
+        let res = 'sc-no-default-cmd ui-no-tooltip SCgElement';
 
         if (base)
             res += ' ' + base;
@@ -188,13 +187,11 @@ SCg.Render.prototype = {
             default:
                 res += ' SCgStateNormal';
         }
-        ;
 
         return res;
     },
 
     classToogle: function (o, cl, flag) {
-
         var item = d3.select(o);
         var str = item.attr("class");
         var res = str ? str.replace(cl, '') : '';
@@ -204,66 +201,66 @@ SCg.Render.prototype = {
         item.attr("class", res);
     },
 
-    // -------------- draw -----------------------
-    update: function () {
+    eventsWrap: function(selector) {
         let self = this;
 
-        function eventsWrap(selector) {
-            selector.on('mouseover', function (d) {
-                self.classToogle(this, 'SCgStateHighlighted', true);
-                if (self.scene.onMouseOverObject(d))
+        selector.on('mouseover', function (d) {
+            self.classToogle(this, 'SCgStateHighlighted', true);
+            if (self.scene.onMouseOverObject(d))
+                d3.event.stopPropagation();
+        })
+            .on('mouseout', function (d) {
+                self.classToogle(this, 'SCgStateHighlighted', false);
+                if (self.scene.onMouseOutObject(d))
                     d3.event.stopPropagation();
             })
-                .on('mouseout', function (d) {
-                    self.classToogle(this, 'SCgStateHighlighted', false);
-                    if (self.scene.onMouseOutObject(d))
-                        d3.event.stopPropagation();
-                })
-                .on('mousedown', function (d) {
-                    self.scene.onMouseDownObject(d);
-                    if (d3.event.stopPropagation())
-                        d3.event.stopPropagation();
-                })
-                .on('mouseup', function (d) {
-                    self.scene.onMouseUpObject(d);
-                    if (d3.event.stopPropagation())
-                        d3.event.stopPropagation();
-                })
-                .on('click', function (d) {
-                    self.scene.onMouseUpObject(d);
-                    if (d3.event.stopPropagation())
-                        d3.event.stopPropagation();
-                    if (self.sandbox.mainElement === d.sc_addr)
-                        return;
-                    if (self.scene.getObjectByScAddr(d.sc_addr) instanceof SCg.ModelEdge)
-                        return;
-                    if (self.sandbox.isSceneWithKey)
-                        self.sandbox.updateContent(d.sc_addr, self.scene);
-                })
-                .on("dblclick", d => {
-                    if (SCWeb.core.Main.editMode === SCgEditMode.SCgViewOnly) return;
-                    if (SCWeb.core.Main.viewMode === SCgViewMode.DistanceBasedSCgView) return;
+            .on('mousedown', function (d) {
+                self.scene.onMouseDownObject(d);
+                if (d3.event.stopPropagation())
+                    d3.event.stopPropagation();
+            })
+            .on('mouseup', function (d) {
+                self.scene.onMouseUpObject(d);
+                if (d3.event.stopPropagation())
+                    d3.event.stopPropagation();
+            })
+            .on('click', function (d) {
+                self.scene.onMouseUpObject(d);
+                if (d3.event.stopPropagation())
+                    d3.event.stopPropagation();
+                if (self.sandbox.mainElement === d.sc_addr)
+                    return;
+                if (self.scene.getObjectByScAddr(d.sc_addr) instanceof SCg.ModelEdge)
+                    return;
+                if (self.sandbox.isSceneWithKey)
+                    self.sandbox.updateContent(d.sc_addr, self.scene);
+            })
+            .on("dblclick", d => {
+                if (SCWeb.core.Main.editMode === SCgEditMode.SCgViewOnly) return;
+                if (SCWeb.core.Main.viewMode === SCgViewMode.DistanceBasedSCgView) return;
 
-                    if (!d.sc_addr) return;
+                if (!d.sc_addr) return;
 
-                    if (d3.event.stopPropagation())
-                        d3.event.stopPropagation();
-                    let windowId = SCWeb.ui.WindowManager.getActiveWindowId();
-                    let container = document.getElementById(windowId);
-                    SCWeb.core.Main.doDefaultCommandWithFormat([d.sc_addr], $(container).attr("sc-addr-fmt"));
-                });
-        }
+                if (d3.event.stopPropagation())
+                    d3.event.stopPropagation();
+                let windowId = SCWeb.ui.WindowManager.getActiveWindowId();
+                let container = document.getElementById(windowId);
+                SCWeb.core.Main.doDefaultCommandWithFormat([d.sc_addr], $(container).attr("sc-addr-fmt"));
+            });
+    },
 
-        function appendNodeVisual(g) {
-            g.append('svg:use')
-                .attr('xlink:href', function (d) {
-                    return '#' + SCgAlphabet.getDefId(d.sc_type);
-                })
-                .attr('class', 'sc-no-default-cmd ui-no-tooltip');
-        }
+    appendNodeVisual: function (g) {
+        g.append('svg:use')
+            .attr('xlink:href', function (d) {
+                return '#' + SCgAlphabet.getDefId(d.sc_type);
+            })
+            .attr('class', 'sc-no-default-cmd ui-no-tooltip');
+    },
 
-        // add nodes that haven't visual
-        this.d3_nodes = this.d3_nodes.data(this.scene.nodes, function (d) {
+    addNodes: function (nodes) {
+        let self = this;
+
+        this.d3_nodes = this.d3_nodes.data(nodes, function (d) {
             return d.id;
         });
 
@@ -274,8 +271,38 @@ SCg.Render.prototype = {
             .attr("transform", function (d) {
                 return 'translate(' + d.position.x + ', ' + d.position.y + ')';
             });
-        eventsWrap(g);
-        appendNodeVisual(g);
+        this.eventsWrap(g);
+        this.appendNodeVisual(g);
+
+        g.append('svg:text')
+            .attr('class', 'SCgText')
+            .attr('x', function (d) {
+                return d.scale.x / 1.3;
+            })
+            .attr('y', function (d) {
+                return d.scale.y / 1.3;
+            })
+            .text(function (d) {
+                return d.text;
+            });
+    },
+
+    updateNodes: function (nodes) {
+        let self = this;
+
+        this.d3_nodes = this.d3_nodes.data(nodes, function (d) {
+            return d.id;
+        });
+
+        let g = this.d3_nodes.enter().append('svg:g')
+            .attr('class', function (d) {
+                return self.classState(d, (d.sc_type & sc_type_constancy_mask) ? 'SCgNode' : 'SCgNodeEmpty');
+            })
+            .attr("transform", function (d) {
+                return 'translate(' + d.position.x + ', ' + d.position.y + ')';
+            });
+        this.eventsWrap(g);
+        this.appendNodeVisual(g);
 
         g.append('svg:text')
             .attr('class', 'SCgText')
@@ -289,107 +316,11 @@ SCg.Render.prototype = {
                 return d.text;
             });
 
-        this.d3_nodes.exit().remove();
+        this.d3_nodes.remove();
+    },
 
-        // add links that haven't visual
-        this.d3_links = this.d3_links.data(this.scene.links, function (d) {
-            return d.id;
-        });
-
-        g = this.d3_links.enter().append('svg:g')
-            .attr("transform", function (d) {
-                return 'translate(' + d.position.x + ', ' + d.position.y + ')';
-            })
-
-        g.append('svg:rect')
-            .attr('class', function (d) {
-                return self.classState(d, 'SCgLink');
-            })
-            .attr('class', 'sc-no-default-cmd ui-no-tooltip');
-
-        g.append('svg:foreignObject')
-            .attr('transform', 'translate(' + self.linkBorderWidth * 0.5 + ',' + self.linkBorderWidth * 0.5 + ')')
-            .attr("width", "100%")
-            .attr("height", "100%")
-            .append("xhtml:link_body")
-            .style("background", "transparent")
-            .style("margin", "0 0 0 0")
-            .html(function (d) {
-                return '<div id="link_' + self.containerId + '_' + d.id + '" class=\"SCgLinkContainer\"><div id="' + d.containerId + '" style="display: inline-block;" class="impl"></div></div>';
-            });
-
-        // Add identifier to sc-link, default (x, y) position
-        g.append('svg:text')
-            .attr('class', 'SCgText')
-            .text(function (d) {
-                return d.text;
-            })
-            .attr('x', function (d) {
-                return d.scale.x + self.linkBorderWidth * 2;
-            })
-            .attr('y', function (d) {
-                return d.scale.y + self.linkBorderWidth * 4;
-            });
-
-        eventsWrap(g);
-
-        this.d3_links.exit().remove();
-
-        // update edges visual
-        this.d3_edges = this.d3_edges.data(this.scene.edges, function (d) {
-            return d.id;
-        });
-
-        // add edges that haven't visual
-        g = this.d3_edges.enter().append('svg:g')
-            .attr('class', function (d) {
-                return self.classState(d, 'SCgEdge');
-            })
-            .attr('pointer-events', 'visibleStroke');
-
-        eventsWrap(g);
-
-        this.d3_edges.exit().remove();
-
-        // update contours visual
-        this.d3_contours = this.d3_contours.data(this.scene.contours, function (d) {
-            return d.id;
-        });
-
-        g = this.d3_contours.enter().append('svg:polygon')
-            .attr('class', function (d) {
-                return self.classState(d, 'SCgContour');
-            })
-            .attr('points', function (d) {
-                var verticiesString = "";
-                for (var i = 0; i < d.points.length; i++) {
-                    var vertex = d.points[i].x + ', ' + d.points[i].y + ' ';
-                    verticiesString = verticiesString.concat(vertex);
-                }
-                return verticiesString;
-            })
-            .attr('title', function (d) {
-                return d.text;
-            });
-        eventsWrap(g);
-
-        this.d3_contours.exit().remove();
-
-        // update buses visual
-        this.d3_buses = this.d3_buses.data(this.scene.buses, function (d) {
-            return d.id;
-        });
-
-        g = this.d3_buses.enter().append('svg:g')
-            .attr('class', function (d) {
-                return self.classState(d, 'SCgBus');
-            })
-            .attr('pointer-events', 'visibleStroke');
-        eventsWrap(g);
-
-        this.d3_buses.exit().remove();
-
-        this.updateObjects();
+    // -------------- draw -----------------------
+    update: function () {
     },
 
     updateRemovedObjects: function (removableObjects) {
@@ -415,184 +346,6 @@ SCg.Render.prototype = {
 
     // -------------- update objects --------------------------
     updateObjects: function () {
-        let self = this;
-        this.d3_nodes.each(function (d) {
-            if (!d.need_observer_sync) return; // do nothing
-
-            d.need_observer_sync = false;
-
-            let g = d3.select(this)
-                .attr("transform", 'translate(' + d.position.x + ', ' + d.position.y + ')scale(' + d.scaleElem + ')')
-                .attr('class', function (d) {
-                    return self.classState(d, (d.sc_type & sc_type_constancy_mask) ? 'SCgNode' : 'SCgNodeEmpty');
-                })
-                .attr("style", 'opacity: ' + d.opacityElem + '; stroke: ' + d.strokeElem + '')
-
-            g.select('use')
-                .attr('xlink:href', function (d) {
-                    return '#' + SCgAlphabet.getDefId(d.sc_type);
-                })
-                .attr("sc_addr", function (d) {
-                    return d.sc_addr;
-                });
-            g.select('text').style('fill', d.fillElem);
-
-            g.selectAll('text').text(function (d) {
-                return d.text;
-            });
-        });
-
-        this.d3_links.each(function (d) {
-            if (!d.need_observer_sync && d.contentLoaded) return; // do nothing
-
-            if (!d.contentLoaded) {
-                let links = {};
-                links[d.containerId] = {addr: d.sc_addr, content: d.content, contentType: d.contentType};
-                self.sandbox.createViewersForScLinks(links);
-
-                if (d.state !== SCgObjectState.NewInMemory || d.content.length) d.contentLoaded = true;
-            }
-            else d.need_observer_sync = false;
-
-            let linkDiv = $(document.getElementById("link_" + self.containerId + "_" + d.id));
-            if (!d.content.length) {
-                d.content = linkDiv.find('.impl').html();
-            }
-            if (!linkDiv.find('.impl').html().length) {
-                linkDiv.find('.impl').html(d.content)
-            }
-
-            const imageDiv = linkDiv.find('img');
-            const pdfDiv = linkDiv.children().find('canvas');
-            let g = d3.select(this).attr("style", 'opacity: ' + d.opacityElem + '; stroke: ' + d.strokeElem + '');
-            g.select('rect')
-                .attr('width', function (d) {
-                    if (imageDiv.length && !isNaN(imageDiv[0].width)) {
-                        d.scale.x = imageDiv[0].width;
-                    } else if (pdfDiv.length && !isNaN(pdfDiv[0].width)) {
-                        d.scale.x = pdfDiv[0].width;
-                    } else {
-                        d.scale.x = Math.min(linkDiv.find('.impl').outerWidth(), 450) + 10;
-                    }
-                    return d.scale.x + self.linkBorderWidth * 2;
-                })
-                .attr('height', function (d) {
-                    if (imageDiv.length && !isNaN(imageDiv[0].height)) {
-                        d.scale.y = imageDiv[0].height;
-                    } else if (pdfDiv.length && !isNaN(pdfDiv[0].height)) {
-                        d.scale.y = pdfDiv[0].height;
-                    } else {
-                        d.scale.y = Math.min(linkDiv.outerHeight(), 350);
-                    }
-                    return d.scale.y + self.linkBorderWidth * 2;
-                })
-                .attr('class', function (d) {
-                    return self.classState(d, 'SCgLink');
-                })
-                .attr("sc_addr", function (d) {
-                    return d.sc_addr;
-                });
-
-            g.selectAll(function () {
-                return this.getElementsByTagName("foreignObject");
-            })
-                .attr('width', function (d) {
-                    return d.scale.x;
-                })
-                .attr('height', function (d) {
-                    return d.scale.y;
-                });
-
-            g.attr("transform", function (d) {
-                return 'translate(' + (d.position.x - (d.scale.x + self.linkBorderWidth) * 0.5) + ', ' + (d.position.y - (d.scale.y + self.linkBorderWidth) * 0.5) + ')scale(' + d.scaleElem + ')';
-            });
-
-            // Update sc-link identifier (x, y) position according to the sc-link width
-            g.selectAll('text')
-                .text(function (d) {
-                    return d.text;
-                })
-                .attr('x', function (d) {
-                    return d.scale.x + self.linkBorderWidth * 2;
-                })
-                .attr('y', function (d) {
-                    return d.scale.y + self.linkBorderWidth * 4;
-                });
-        });
-
-        this.d3_edges.each(function (d) {
-            if (!d.need_observer_sync) return; // do nothing
-            d.need_observer_sync = false;
-
-            if (d.need_update)
-                d.update();
-            let d3_edge = d3.select(this);
-
-            SCgAlphabet.updateEdge(d, d3_edge, self.containerId);
-            d3_edge.attr('class', function (d) {
-                return self.classState(d, 'SCgEdge');
-            })
-                .attr("sc_addr", function (d) {
-                    return d.sc_addr;
-                });
-
-            if (SCWeb.core.Main.viewMode === SCgViewMode.DistanceBasedSCgView) {
-                d3_edge.select('.SCgEdgeEndArrowCommon').style('stroke-width', `${d.widthEdge}px`).style('opacity', d.opacityElem);
-                d3_edge.select('.SCgEdgeEndArrowAccess').style('stroke-width', `${d.widthEdge - 6}px`).style('opacity', d.opacityElem);
-            }
-        });
-
-        this.d3_contours.each(function (d) {
-            d3.select(this).attr('d', function (d) {
-
-                if (!d.need_observer_sync) return; // do nothing
-
-                if (d.need_update)
-                    d.update();
-
-                let d3_contour = d3.select(this);
-
-                d3_contour.attr('class', function (d) {
-                    return self.classState(d, 'SCgContour');
-                });
-
-                d3_contour.attr('points', function (d) {
-                    var verticiesString = "";
-                    for (var i = 0; i < d.points.length; i++) {
-                        var vertex = d.points[i].x + ', ' + d.points[i].y + ' ';
-                        verticiesString = verticiesString.concat(vertex);
-                    }
-                    return verticiesString;
-                });
-
-                d3_contour.attr('title', function (d) {
-                    return d.text;
-                });
-
-                d.need_update = false;
-                d.need_observer_sync = false;
-
-                return self.d3_contour_line(d.points) + 'Z';
-            })
-                .attr("sc_addr", function (d) {
-                    return d.sc_addr;
-                });
-        });
-
-        this.d3_buses.each(function (d) {
-            if (!d.need_observer_sync) return; // do nothing
-            d.need_observer_sync = false;
-
-            if (d.need_update)
-                d.update();
-            var d3_bus = d3.select(this);
-            SCgAlphabet.updateBus(d, d3_bus);
-            d3_bus.attr('class', function (d) {
-                return self.classState(d, 'SCgBus');
-            });
-        });
-
-        this.updateLinePoints();
     },
 
     updateLink: function () {

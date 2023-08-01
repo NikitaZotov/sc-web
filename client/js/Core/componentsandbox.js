@@ -671,8 +671,8 @@ SCWeb.core.ComponentSandbox.prototype.updateContent = async function (scAddr, sc
     }
 
     const updateScgWindow = async (sceneAddr) => {
-        self.layout = () => {
-            self.scene.layout();
+        self.layout = (sceneNodes) => {
+            self.scene.layout(sceneNodes);
         };
 
         self.postLayout = () => {

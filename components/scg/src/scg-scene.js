@@ -142,6 +142,7 @@ SCg.Scene.prototype = {
     appendNode: function (node) {
         this.nodes.push(node);
         node.scene = this;
+        this.render.addNodes([node]);
     },
 
     appendLink: function (link) {
@@ -284,25 +285,24 @@ SCg.Scene.prototype = {
      * Updates render
      */
     updateRender: function () {
-        this.render.update();
+        //this.render.update();
     },
 
     /**
      * Updates render objects state
      */
     updateObjectsVisual: function () {
-        this.render.updateObjects();
+        //this.render.updateObjects();
     },
 
     updateLinkVisual: function () {
-        this.render.updateLink();
-        this.render.update();
+        //this.render.updateLink();
+        //this.render.update();
     },
 
     // --------- layout --------
-    layout: function () {
-        this.layout_manager.doLayout();
-        this.render.update();
+    layout: function (sceneNodes) {
+        this.layout_manager.doLayout(sceneNodes);
     },
 
     onLayoutTick: function () {

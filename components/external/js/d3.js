@@ -5479,6 +5479,28 @@ d3 = function() {
       };
     }
     force.tick = function() {
+      let neighbordist = 50;
+      let sum = [0,0];
+      let count = 0;
+      for (let i = 0; i < boids.length; i++) {
+        let d = p5.Vector.dist(this.position,boids[i].position);
+        if ((d > 0) && (d < neighbordist)) {
+          sum.add(boids[i].velocity);
+          count++;
+        }
+      }
+      if (count > 0) {
+        sum.div(count);
+        sum.normalize();
+        sum.mult(this.maxspeed);
+        let steer = p5.Vector.sub(sum, this.velocity);
+        steer.limit(this.maxforce);
+        return steer;
+      } else {
+        return createVector(0, 0);
+      }
+    };
+    force.tick = function() {
       if ((alpha *= .99) < .005) {
         event.end({
           type: "end",
