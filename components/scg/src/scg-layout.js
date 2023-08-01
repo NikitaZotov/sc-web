@@ -14,9 +14,9 @@ function SCgLayoutNode(object) {
         this.random(-this.step, this.step),
         this.random(-this.step, this.step)
     );
-    // this.r = 3.0;
+    this.r = 3.0;
     this.position = object.position;
-    this.maxspeed = 3;    // Maximum speed
+    this.maxspeed = 2;    // Maximum speed
     this.maxforce = 0.02; // Maximum steering force
 }
 
@@ -73,10 +73,12 @@ SCgLayoutNode.prototype.seek = function(target) {
 
 // Wraparound
 SCgLayoutNode.prototype.borders = function() {
-    // if (this.position.x < -this.r) this.position.x = width + this.r;
-    // if (this.position.y < -this.r) this.position.y = height + this.r;
-    // if (this.position.x > width + this.r) this.position.x = -this.r;
-    // if (this.position.y > height + this.r) this.position.y = -this.r;
+    const [width, height] = this.object.scene.render.getContainerSize();
+
+    if (this.position.x < -this.r) this.position.x = width + this.r;
+    if (this.position.y < -this.r) this.position.y = height + this.r;
+    if (this.position.x > width + this.r) this.position.x = -this.r;
+    if (this.position.y > height + this.r) this.position.y = -this.r;
 }
 
 // Separation
@@ -207,19 +209,29 @@ SCg.LayoutManager.prototype.prepareObjects = function (sceneNodes) {
  * Starts layout in scene
  */
 SCg.LayoutManager.prototype.doLayout = function () {
-    console.log('do layout')
+    const updateRetries = 50;
+    const batchCount = 2;
+
+    const shuffle = (arr) => {
+        return arr.sort(() => Math.round(Math.random() * 100) - 50);
+    }
+
     this.prepareObjects(this.scene.nodes);
-    for (let b = 0; b < 50; ++b) {
-        const layoutNodes = this.nodes[0];
+    for (let b = 0; b < updateRetries; ++b) {
+        const layoutNodes = shuffle(this.nodes[0]);
 
         for (let i = 0; i < layoutNodes.length; ++i) {
             const node = layoutNodes[i];
 
-            node.run(layoutNodes);  // Passing the entire list of nodes to each node individually
-            this.onTickUpdate([node]);
+            let prevIndex = 0;
+            let currentIndex = 0;
+            for (let j = 1; j <= batchCount; ++j) {
+                prevIndex = currentIndex;
+                currentIndex = layoutNodes.length / batchCount * j;
+                node.run(layoutNodes.slice(prevIndex, currentIndex));  // Passing the entire list of nodes to each node individually
+                this.onTickUpdate([node]);
+            }
         }
-
-        this.onTickUpdate(layoutNodes);
     }
 };
 

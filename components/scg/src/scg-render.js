@@ -683,9 +683,7 @@ SCg.Render.prototype = {
 
     // ------- help functions -----------
     getContainerSize: function () {
-        var el = document.getElementById(this.containerId);
+        const el = document.getElementById(this.containerId);
         return [el.clientWidth, el.clientHeight];
     }
-
-
 }
