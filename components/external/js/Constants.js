@@ -17,7 +17,7 @@ const sc_type_inactual_arc = (sc_type_membership_arc | 0x2000)
 
 // sc-arc permanence
 const sc_type_temp_arc = (sc_type_membership_arc | 0x400)
-const sc_type_perm_arc = (sc_type_membership_arc | sc_type_actual_arc | 0x800)
+const sc_type_perm_arc = (sc_type_membership_arc | 0x800)
 
 // sc-arc positivity
 const sc_type_pos_arc = (sc_type_membership_arc | 0x80)
@@ -44,7 +44,7 @@ const sc_type_permanency_mask = (sc_type_perm_arc | sc_type_temp_arc)
 const sc_type_positivity_mask = (sc_type_pos_arc | sc_type_neg_arc)
 
 const sc_type_membership_arc_mask
-    = (sc_type_actuality_mask | sc_type_permanency_mask | sc_type_positivity_mask)
+    = (sc_type_actuality_mask | sc_type_permanency_mask | sc_type_positivity_mask | sc_type_fuz_arc)
 const sc_type_common_arc_mask = (sc_type_common_arc)
 const sc_type_common_edge_mask = (sc_type_common_edge)
 

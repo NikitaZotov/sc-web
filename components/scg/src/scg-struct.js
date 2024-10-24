@@ -310,7 +310,7 @@ const SCgStructToScTranslatorImpl = function (_editor, _sandbox) {
     const translateNodes = async function (nodes) {
         const implFunc = async function (node) {
             if (!node.sc_addr && node.text) {
-                let linkAddrs = await scClient.getLinksByContents([node.text]);
+                let linkAddrs = await scClient.searchLinksByContents([node.text]);
                 if (linkAddrs.length) {
                     linkAddrs = linkAddrs[0];
                     if (linkAddrs.length) {
@@ -467,7 +467,7 @@ const SCgStructToScTranslatorImpl = function (_editor, _sandbox) {
 
             // Find link from kb by system identifier
             if (!link.sc_addr && link.text) {
-                let linkSystemIdentifierAddrs = await scClient.getLinksByContents([link.text]);
+                let linkSystemIdentifierAddrs = await scClient.searchLinksByContents([link.text]);
                 if (linkSystemIdentifierAddrs.length) {
                     linkSystemIdentifierAddrs = linkSystemIdentifierAddrs[0];
                     if (linkSystemIdentifierAddrs.length) {
