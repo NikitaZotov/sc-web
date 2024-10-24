@@ -114,7 +114,6 @@ ScHelper.prototype.getMainMenuCommands = async function () {
     );
     let decompositionResult = await self.scClient.searchByTemplate(decompositionTemplate);
     await Promise.all(decompositionResult.map(x => parseCommand(x.get('child_addr').value, res)));
-    console.log(res)
     return res;
   }
 

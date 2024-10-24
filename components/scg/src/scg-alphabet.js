@@ -302,13 +302,19 @@ var SCgAlphabet = {
 
             // if it is membership, then append main line
             if ((connector.sc_type & sc_type_membership_arc) == sc_type_membership_arc) {
-
                 let main_style = 'SCgUnknownArc';
-                if ((connector.sc_type & sc_type_perm_arc) == sc_type_perm_arc) {
-                    main_style = 'SCgPermArc';
+                if (connector.sc_type & sc_type_const) {
+                    if ((connector.sc_type & sc_type_perm_arc) == sc_type_perm_arc)
+                        main_style = 'SCgConstPermArc';
+                    else if ((connector.sc_type & sc_type_temp_arc) == sc_type_temp_arc)
+                        main_style = 'SCgConstTempArc';
                 }
-                else if ((connector.sc_type & sc_type_temp_arc) == sc_type_temp_arc) {
-                    main_style = 'SCgTempArc';
+
+                if (connector.sc_type & sc_type_var) {
+                    if ((connector.sc_type & sc_type_perm_arc) == sc_type_perm_arc)
+                        main_style = 'SCgVarPermArc';
+                    else if ((connector.sc_type & sc_type_temp_arc) == sc_type_temp_arc)
+                        main_style = 'SCgVarTempArc';
                 }
 
                 main_style += ' ' + SCgAlphabet.classLevel(connector);
@@ -318,68 +324,65 @@ var SCgAlphabet = {
                     .style("marker-end", "url(#membership-arc-arrow-end_" + containerId + ")")
                     .attr('d', position_path);
 
-                if (connector.sc_type & sc_type_constancy_mask) {
-                    if ((connector.sc_type & sc_type_perm_arc) == sc_type_perm_arc)
-                        p.classed('SCgVarPermArc', (connector.sc_type & sc_type_var));
-                    else if ((connector.sc_type & sc_type_temp_arc) == sc_type_temp_arc)
-                        p.classed('SCgVarTempArc', (connector.sc_type & sc_type_var));
-                } else {
-                    d3_group.append('svg:path')
-                        .classed('SCgUnknownArc', true)
-                        .attr('d', position_path);
-                }
-
                 if ((connector.sc_type & sc_type_neg_arc) == sc_type_neg_arc) {
                     d3_group.append('svg:path')
                         .classed('SCgNegArc ' + SCgAlphabet.classLevel(connector), true)
                         .attr('d', position_path);
                 }
             } else if (((connector.sc_type & sc_type_common_arc) == sc_type_common_arc) || ((connector.sc_type & sc_type_common_edge) == sc_type_common_edge)) {
-                let main_style = 'SCgCommonArcBackground';
+                let main_style = 'SCgConstCommonArcBackground';
                 if ((connector.sc_type & sc_type_common_edge) == sc_type_common_edge) {
-                    if (connector.sc_type & sc_type_var) {
-                        d3_group.append('svg:path')
-                            .classed('SCgVarCommonArc ' + SCgAlphabet.classLevel(connector), true)
-                            .attr('d', position_path);
-                    }
-                    else {
+                    if (connector.sc_type & sc_type_const) {
                         d3_group.append('svg:path')
                             .classed(main_style, true)
                             .attr('d', position_path);
                     }
-                }
-
-                if ((connector.sc_type & sc_type_common_arc) == sc_type_common_arc) {
-                    if (connector.sc_type & sc_type_var) {
+                    else if (connector.sc_type & sc_type_var) {
                         d3_group.append('svg:path')
-                            .classed('SCgVarCommonArc ' + SCgAlphabet.classLevel(connector), true)
-                            .classed('SCgCommonArcArrowEnd ' + SCgAlphabet.classLevel(connector), true)
+                            .classed('SCgVarCommonArcBackground ' + SCgAlphabet.classLevel(connector), true)
+                            .attr('d', position_path);
+                    }
+                    else {
+                        d3_group.append('svg:path')
+                            .classed(main_style + ' ' + SCgAlphabet.classLevel(connector), true)
+                            .attr('d', position_path);
+                    }
+                }
+                else if ((connector.sc_type & sc_type_common_arc) == sc_type_common_arc) {
+                    if (connector.sc_type & sc_type_const) {
+                        d3_group.append('svg:path')
+                            .classed(main_style, true)
+                            .classed('SCgCommonConnectorArrowEnd ' + SCgAlphabet.classLevel(connector), true)
+                            .style("marker-end", "url(#common-arc-arrow-end_" + containerId + ")")
+                            .attr('d', position_path);
+                    }
+                    else if (connector.sc_type & sc_type_var) {
+                        d3_group.append('svg:path')
+                            .classed('SCgVarCommonArcBackground ' + SCgAlphabet.classLevel(connector), true)
+                            .classed('SCgCommonConnectorArrowEnd ' + SCgAlphabet.classLevel(connector), true)
                             .style("marker-end", "url(#common-arc-arrow-end_" + containerId + ")")
                             .attr('d', position_path);
                     }
                     else {
                         d3_group.append('svg:path')
-                            .classed('SCgCommonArcBackground', true)
-                            .classed('SCgCommonArcArrowEnd ' + SCgAlphabet.classLevel(connector), true)
+                            .classed(main_style + ' ' + SCgAlphabet.classLevel(connector), true)
+                            .classed('SCgCommonConnectorArrowEnd ' + SCgAlphabet.classLevel(connector), true)
                             .style("marker-end", "url(#common-arc-arrow-end_" + containerId + ")")
                             .attr('d', position_path);
                     }
                 }
 
                 d3_group.append('svg:path')
-                    .classed('SCgCommonArcForeground ' + SCgAlphabet.classLevel(connector), true)
-                    .attr('d', position_path)
+                    .classed('SCgCommonConnectorForeground ' + SCgAlphabet.classLevel(connector), true)
+                    .attr('d', position_path);
 
-                if ((connector.sc_type & sc_type_constancy_mask) === 0)
-                {
+                if ((connector.sc_type & sc_type_constancy_mask) == 0) {
                     d3_group.append('svg:path')
-                        .classed('SCgVarCommonArc ' + SCgAlphabet.classLevel(connector), true)
+                        .classed('SCgUnknownCommonArcForeground ' + SCgAlphabet.classLevel(connector), true)
                         .attr('d', position_path);
                 }
-
             } else {
-                // unknown
-                let main_style = 'SCgUnknownArc ' + SCgAlphabet.classLevel(connector);
+                let main_style = 'SCgConnector ' + SCgAlphabet.classLevel(connector);
                 d3_group.append('svg:path')
                     .classed(main_style, true)
                     .attr('d', position_path);
