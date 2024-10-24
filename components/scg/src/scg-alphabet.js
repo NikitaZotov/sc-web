@@ -55,7 +55,7 @@ var SCgAlphabet = {
         g.append('svg:line').attr('x1', '-10').attr('x2', '10').attr('y1', '0').attr('y2', '0').attr('stroke-width', nodeLineStroke);
         this.appendText(g);
 
-        g = defs.append('svg:g').attr('id', 'scg.const.node.struct');
+        g = defs.append('svg:g').attr('id', 'scg.const.node.structure');
         g.append('svg:use').attr('xlink:href', '#scg.const.node.outer');
         g.append('svg:circle').attr('cx', '0').attr('cy', '0').attr('r', '2').attr('stroke', 'none').attr('fill', '#000');
         this.appendText(g);
@@ -108,7 +108,7 @@ var SCgAlphabet = {
         g.append('svg:line').attr('x1', '-10').attr('x2', '10').attr('y1', '0').attr('y2', '0').attr('stroke-width', nodeLineStroke);
         this.appendText(g);
 
-        g = defs.append('svg:g').attr('id', 'scg.var.node.struct');
+        g = defs.append('svg:g').attr('id', 'scg.var.node.structure');
         g.append('svg:use').attr('xlink:href', '#scg.var.node.outer');
         g.append('svg:circle').attr('cx', '0').attr('cy', '0').attr('r', '2').attr('stroke', 'none').attr('fill', '#000');
         this.appendText(g);
@@ -184,8 +184,8 @@ var SCgAlphabet = {
         this.scType2Str[sc_type_const | sc_type_node | sc_type_node_material] = 'scg.const.node.material';
         this.scType2Str[sc_type_const | sc_type_node | sc_type_node_superclass] = 'scg.const.node.superclass';
         this.scType2Str[sc_type_const | sc_type_node | sc_type_node_class] = 'scg.const.node.class';
-        this.scType2Str[sc_type_const | sc_type_node | sc_type_node_structure] = 'scg.const.node.struct';
-        this.scType2Str[sc_type_const | sc_type_node | sc_type_node_norole] = 'scg.const.node.norole';
+        this.scType2Str[sc_type_const | sc_type_node | sc_type_node_structure] = 'scg.const.node.structure';
+        this.scType2Str[sc_type_const | sc_type_node | sc_type_node_no_role] = 'scg.const.node.norole';
         this.scType2Str[sc_type_const | sc_type_node | sc_type_node_role] = 'scg.const.node.role';
         this.scType2Str[sc_type_const | sc_type_node | sc_type_node_tuple] = 'scg.const.node.tuple';
 
@@ -193,8 +193,8 @@ var SCgAlphabet = {
         this.scType2Str[sc_type_var | sc_type_node | sc_type_node_material] = 'scg.var.node.material';
         this.scType2Str[sc_type_var | sc_type_node | sc_type_node_superclass] = 'scg.var.node.superclass';
         this.scType2Str[sc_type_var | sc_type_node | sc_type_node_class] = 'scg.var.node.class';
-        this.scType2Str[sc_type_var | sc_type_node | sc_type_node_structure] = 'scg.var.node.struct';
-        this.scType2Str[sc_type_var | sc_type_node | sc_type_node_norole] = 'scg.var.node.norole';
+        this.scType2Str[sc_type_var | sc_type_node | sc_type_node_structure] = 'scg.var.node.structure';
+        this.scType2Str[sc_type_var | sc_type_node | sc_type_node_no_role] = 'scg.var.node.norole';
         this.scType2Str[sc_type_var | sc_type_node | sc_type_node_role] = 'scg.var.node.role';
         this.scType2Str[sc_type_var | sc_type_node | sc_type_node_tuple] = 'scg.var.node.tuple';
 
@@ -300,7 +300,7 @@ var SCgAlphabet = {
 
             d3_group.append('svg:path').classed('SCgConnectorSelectBounds', true).attr('d', position_path);
 
-            // if it accessory, then append main line
+            // if it is membership, then append main line
             if ((connector.sc_type & sc_type_membership_arc) == sc_type_membership_arc) {
 
                 let main_style = 'SCgUnknownArc';
@@ -320,9 +320,9 @@ var SCgAlphabet = {
 
                 if (connector.sc_type & sc_type_constancy_mask) {
                     if ((connector.sc_type & sc_type_perm_arc) == sc_type_perm_arc)
-                        p.classed('SCgVarPermArc', (connector.sc_type & sc_type_var) && (connector.sc_type & sc_type_perm_arc));
+                        p.classed('SCgVarPermArc', (connector.sc_type & sc_type_var));
                     else if ((connector.sc_type & sc_type_temp_arc) == sc_type_temp_arc)
-                        p.classed('SCgVarTempArc', (connector.sc_type & sc_type_var) && (connector.sc_type & sc_type_perm_arc));
+                        p.classed('SCgVarTempArc', (connector.sc_type & sc_type_var));
                 } else {
                     d3_group.append('svg:path')
                         .classed('SCgUnknownArc', true)
@@ -413,12 +413,7 @@ var SCgAlphabet = {
         }
 
         if (d3_group[0][0].childElementCount == 0) {
-
             d3_group.append('svg:path').classed('SCgBusPath', true).attr('d', position_path);
-
-            // if it accessory, then append main line
-
-
         } else {
             // update existing
             d3_group.selectAll('path')

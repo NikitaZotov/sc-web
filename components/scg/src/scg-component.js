@@ -63,7 +63,7 @@ const SCgViewerWindow = function (sandbox) {
                 continue;
             }
 
-            if (el.el_type & sc_type_node || ((el.el_type & sc_type_node_link) == sc_type_node_link)) {
+            if ((el.el_type & sc_type_node_link) == sc_type_node_link) {
                 var model_node = SCg.Creator.generateNode(el.el_type, new SCg.Vector3(10 * Math.random(), 10 * Math.random(), 0), '');
                 this.editor.scene.appendNode(model_node);
                 this.editor.scene.objects[el.id] = model_node;
@@ -100,7 +100,7 @@ const SCgViewerWindow = function (sandbox) {
         }
 
         if (connectors.length > 0)
-            alert("error");
+            alert("There are some sc-connectors that are impossible to be shown.");
 
         this.editor.render.update();
         this.editor.scene.layout();
